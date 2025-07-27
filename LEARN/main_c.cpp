@@ -1,7 +1,3 @@
-#include <iostream>
-// #include "MutantStack.hpp"
-#include <stack>
-#include <sstream>
 
 int calculate(int a, int b, char oper)
 {
@@ -30,40 +26,33 @@ int main(int argc, char **argv)
 	std::stack<int> stacky;
 	std::string str = argv[1];
 	std::stringstream ss(str);
-	std::string token;
-	bool addnumber = false;
-	int number;
-
-	while (ss >> token)
+	
+	int i = 0;
+	while (str[i] != 0)
 	{
 		int a = 0;
 		int b = 0;
-		switch (token[0])
+		switch (str[i])
 		{
+		case ' ':
+			break;
 		case '+':
 		case '-':
 		case '*':
 		case '/':
-			b = stacky.top();
-			stacky.pop();
 			a = stacky.top();
 			stacky.pop();
-			stacky.push(calculate(a, b, token[0]));
+			b = stacky.top();
+			stacky.pop();
+			stacky.push(calculate(a, b, str[i]));
+			i++;
 			break;
 		default:
-			addnumber = true;
+			stacky.push(std::atoi(&str[i]));
 		}
-		if (addnumber)
-		{
-			std::stringstream tokenss(token);
-			if (!(tokenss >> number))
-			{
-				std::cout << "Error" << std::endl;
-				return 1;
-			}
-			stacky.push(number);
-		}
-		addnumber = false;
+		std::cout << stacky.top() << std::endl;
+
+		i++;
 	}
 	std::cout << stacky.top() << std::endl;
 }
