@@ -69,7 +69,7 @@ ${CLASS_NAME}::${CLASS_NAME}(${CLASS_NAME} const &other)
 ${CLASS_NAME} &${CLASS_NAME}::operator=(${CLASS_NAME} const &other)
 {
     std::cout << GREY << "${CLASS_NAME} copy assignment operator" << RESET << std::endl;
-    if (this != &rhs)
+    if (this != &other)
     {
       /*TODO*/;
     }

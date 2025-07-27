@@ -1,23 +1,7 @@
 #include <iostream>
-// #include "MutantStack.hpp"
 #include <stack>
 #include <sstream>
-
-int calculate(int a, int b, char oper)
-{
-	switch (oper)
-	{
-	case '+':
-		return a + b;
-	case '-':
-		return a - b;
-	case '*':
-		return a * b;
-	case '/':
-		return a / b;
-	}
-	return 0;
-}
+#include "RPN.hpp"
 
 int main(int argc, char **argv)
 {
@@ -27,43 +11,15 @@ int main(int argc, char **argv)
 		return (0);
 	}
 
-	std::stack<int> stacky;
 	std::string str = argv[1];
-	std::stringstream ss(str);
-	std::string token;
-	bool addnumber = false;
-	int number;
-
-	while (ss >> token)
+	int result;
+	try
 	{
-		int a = 0;
-		int b = 0;
-		switch (token[0])
-		{
-		case '+':
-		case '-':
-		case '*':
-		case '/':
-			b = stacky.top();
-			stacky.pop();
-			a = stacky.top();
-			stacky.pop();
-			stacky.push(calculate(a, b, token[0]));
-			break;
-		default:
-			addnumber = true;
-		}
-		if (addnumber)
-		{
-			std::stringstream tokenss(token);
-			if (!(tokenss >> number))
-			{
-				std::cout << "Error" << std::endl;
-				return 1;
-			}
-			stacky.push(number);
-		}
-		addnumber = false;
+		result = RPN::processRPN(str);
+		std::cout << result << std::endl;
 	}
-	std::cout << stacky.top() << std::endl;
+	catch (std::exception &e)
+	{
+		std::cout << e.what() << std::endl;
+	}
 }

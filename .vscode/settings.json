@@ -59,6 +59,7 @@
 		"iterator": "cpp",
 		"memory_resource": "cpp",
 		"utility": "cpp",
-		"stack": "cpp"
+		"stack": "cpp",
+		"variant": "cpp"
 	}
 }
