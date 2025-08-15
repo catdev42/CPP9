@@ -53,6 +53,10 @@ cat > ${CLASS_NAME}.cpp << EOL
 #include "${CLASS_NAME}.hpp"
 #include <iostream>
 
+/********************************************/
+/********************************************/
+/******          CONSTRUCTORS          ******/
+
 ${CLASS_NAME}::${CLASS_NAME}()
 {
     std::cout << GREY << "${CLASS_NAME} default constructor" << RESET << std::endl;
@@ -84,11 +88,11 @@ ${CLASS_NAME}::~${CLASS_NAME}()
 
 /********************************************/
 /********************************************/
-/****** MEMBER FUNCTIONS ******/
+/******        MEMBER FUNCTIONS        ******/
 
 /********************************************/
 /********************************************/
-/****** STREAM ******/
+/******            STREAM              ******/
 
 std::ostream &operator<<(std::ostream &o, const ${CLASS_NAME} &infile)
 {

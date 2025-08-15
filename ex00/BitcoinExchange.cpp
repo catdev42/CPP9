@@ -1,0 +1,94 @@
+#include "BitcoinExchange.hpp"
+#include <iostream>
+#include <sstream>
+
+/********************************************/
+/********************************************/
+/******        MEMBER FUNCTIONS        ******/
+
+/**
+ * struct tm takes in these cariables:
+ * day from 1 to 31,
+ * month from 0 to 11 and
+ * year in how many years after 1900
+ * + is daylight savings time variable
+ * then this struct can be converted to time_t (time since epoch)
+ * then this can be converted back to tm with function localtime(<time_t>)
+ * IF these are the same, then the date is valid
+ *
+ * function expects the string in format dd-mm-yyyy
+ */
+bool BitcoinExchange::extractDate(const std::string &s, int &y, int &m, int &d)
+{
+    std::istringstream is(s);
+    char delimiter;
+    if (is >> d >> delimiter >> m >> delimiter >> y)
+    {
+        struct tm t = {0};
+        t.tm_mday = d;
+        t.tm_mon = m - 1;
+        t.tm_year = y - 1900;
+        t.tm_isdst = -1;
+
+        time_t when = mktime(&t);
+        const struct tm *norm = localtime(&when);
+
+        return (norm->tm_mday == d &&
+                norm->tm_mon == m - 1 &&
+                norm->tm_year == y - 1900);
+    }
+    return false;
+}
+
+/********************************************/
+/********************************************/
+/******          CONSTRUCTORS          ******/
+
+BitcoinExchange::BitcoinExchange(const std::string &db)
+{
+    std::cout << GREY << "BitcoinExchange database constructor" << RESET << std::endl;
+    return;
+}
+
+BitcoinExchange::BitcoinExchange()
+{
+    std::cout << GREY << "BitcoinExchange default constructor" << RESET << std::endl;
+    return;
+}
+
+BitcoinExchange::BitcoinExchange(BitcoinExchange const &other)
+{
+    std::cout << GREY << "BitcoinExchange copy constructor" << RESET << std::endl;
+    /*TODO*/;
+    return;
+}
+
+BitcoinExchange &BitcoinExchange::operator=(BitcoinExchange const &other)
+{
+    std::cout << GREY << "BitcoinExchange copy assignment operator" << RESET << std::endl;
+    if (this != &other)
+    {
+        /*TODO*/;
+    }
+    return *this;
+}
+
+BitcoinExchange::~BitcoinExchange()
+{
+    std::cout << GREY << "BitcoinExchange destructor" << RESET << std::endl;
+    return;
+}
+
+/********************************************/
+/********************************************/
+/****** STREAM ******/
+
+std::ostream &operator<<(std::ostream &o, const BitcoinExchange &infile)
+{
+    o << "";
+    return o;
+}
+
+/********************************************/
+/********************************************/
+/****** PRIVATE ******/
