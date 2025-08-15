@@ -1,10 +1,53 @@
 #include "BitcoinExchange.hpp"
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 /********************************************/
 /********************************************/
 /******        MEMBER FUNCTIONS        ******/
+
+void BitcoinExchange::updateDataBase(const std::string &db)
+{
+    std::string line;
+    std::string key;
+    char delim;
+    int priceBTC;
+
+    std::fstream f(db);
+
+    if (!f.good())
+        throw BitcoinExchange::InputError("Error: cannot read database.");
+
+    getline(f, line);
+
+    while (getline(f, line))
+    {
+        std::istringstream lineStream(line);
+        getline(f, key, ',');
+        if (lineStream >> delim >> priceBTC)
+            data[key] = priceBTC;
+    }
+}
+
+double BitcoinExchange::executeLine(const std::string &date, double amountBTC)
+{
+    if (amountBTC < 0)
+        throw InputError("Error: not a positive number.");
+    if (!extractDate(date))
+        throw InputError("Error: not a valid date.");
+    if (amountBTC > INT_MAX)
+        throw InputError("Error: too large a number.");
+
+    std::map<std::string, double>::iterator it;
+    it = data.lower_bound(date);
+    if (it->first > date && it != data.begin())
+        it = it--;
+    if (it != data.end())
+        return (amountBTC * it->second);
+    throw InputError("Error: date predates Bitcoin.");
+    return 0;
+}
 
 /**
  * struct tm takes in these cariables:
@@ -18,8 +61,12 @@
  *
  * function expects the string in format dd-mm-yyyy
  */
-bool BitcoinExchange::extractDate(const std::string &s, int &y, int &m, int &d)
+// bool BitcoinExchange::extractDate(const std::string &s, int &y, int &m, int &d)
+bool BitcoinExchange::extractDate(const std::string &s)
 {
+    int y;
+    int m;
+    int d;
     std::istringstream is(s);
     char delimiter;
     if (is >> d >> delimiter >> m >> delimiter >> y)
@@ -47,6 +94,7 @@ bool BitcoinExchange::extractDate(const std::string &s, int &y, int &m, int &d)
 BitcoinExchange::BitcoinExchange(const std::string &db)
 {
     std::cout << GREY << "BitcoinExchange database constructor" << RESET << std::endl;
+
     return;
 }
 

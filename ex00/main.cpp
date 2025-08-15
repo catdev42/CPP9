@@ -38,7 +38,7 @@ int main(int argc, char **argv)
 				char delim;
 				int amountBTC;
 				std::istringstream lineStream(line);
-				if (!(lineStream >> date >> delim >> amountBTC))
+				if (!(lineStream >> date >> delim >> amountBTC) || delim != '|')
 				{
 					std::cerr << "Error: bad input => " << line << std::endl;
 					continue;
