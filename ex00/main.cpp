@@ -9,10 +9,39 @@
 
 #include <ctime>
 
+void processFile(std::ifstream &f, BitcoinExchange &btc)
+{
+	std::string line;
+	double total;
+
+	if (!std::getline(f, line))
+		return;
+	while (getline(f, line))
+	{
+		try
+		{
+			std::string date;
+			char delim;
+			double amountBTC;
+			std::istringstream lineStream(line);
+			if (!(lineStream >> date >> delim >> amountBTC) || delim != '|')
+				std::cerr << "Error: bad input => " << line << std::endl;
+			else
+			{
+				total = btc.executeLine(date, amountBTC);
+				std::cout << date << " => " << amountBTC << " = " << total << std::endl;
+			}
+		}
+		catch (BitcoinExchange::InputError &e)
+		{
+			std::cerr << e.what() << std::endl;
+		}
+	}
+}
+
 int main(int argc, char **argv)
 {
 	std::string line;
-
 	if (argc != 2)
 	{
 		std::cerr << "Error: could not open file." << std::endl;
@@ -25,38 +54,15 @@ int main(int argc, char **argv)
 			std::cerr << "Error: could not open file." << std::endl;
 		return 1;
 	}
-	std::getline(f, line);
-
 	try
 	{
 		BitcoinExchange btc("data.csv");
-		while (getline(f, line))
-		{
-			try
-			{
-				std::string date;
-				char delim;
-				double amountBTC;
-				std::istringstream lineStream(line);
-				if (!(lineStream >> date >> delim >> amountBTC) || delim != '|')
-				{
-					std::cerr << "Error: bad input => " << line << std::endl;
-					
-					continue;
-				}
-				std::cout << btc.executeLine(date, amountBTC) << std::endl;
-			}
-			catch (BitcoinExchange::InputError &e)
-			{
-				std::cerr << e.what() << std::endl;
-			}
-		}
+		processFile(f, btc);
 	}
 	catch (std::exception &e)
 	{
 		std::cerr << e.what() << std::endl;
 		return 1;
 	}
-
 	return 0;
 }

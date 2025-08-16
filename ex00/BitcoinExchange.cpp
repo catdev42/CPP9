@@ -12,7 +12,6 @@ void BitcoinExchange::updateDataBase(const std::string &db)
 {
     std::string line;
     std::string key;
-    char delim;
     double priceBTC;
 
     std::fstream f(db.c_str());
@@ -25,7 +24,7 @@ void BitcoinExchange::updateDataBase(const std::string &db)
     while (getline(f, line))
     {
         std::istringstream lineStream(line);
-        if (  getline(lineStream, key, ',') && lineStream >> priceBTC)
+        if (getline(lineStream, key, ',') && lineStream >> priceBTC)
             data[key] = priceBTC;
     }
 }
@@ -41,14 +40,12 @@ double BitcoinExchange::executeLine(const std::string &date, double amountBTC)
 
     std::map<std::string, double>::iterator it;
     it = data.lower_bound(date);
-    if (it == data.end() ||( it->first > date && it != data.begin()))
+    if (it == data.end() || (it->first > date && it != data.begin()))
         it = it--;
 
     if (it != data.end())
-std::cout <<  it->second << "\n";
-    if (it != data.end())
         return (amountBTC * it->second);
-    
+
     throw InputError("Error: date predates Bitcoin.");
     return 0;
 }
