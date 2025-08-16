@@ -61,6 +61,7 @@
 		"utility": "cpp",
 		"stack": "cpp",
 		"variant": "cpp",
-		"map": "cpp"
+		"map": "cpp",
+		"deque": "cpp"
 	}
 }
