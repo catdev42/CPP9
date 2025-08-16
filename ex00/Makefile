@@ -2,7 +2,7 @@
 #* INGREDIENTS *#
 #***************#
 
-SRC = main.cpp
+SRC = BitcoinExchange.cpp main.cpp
 OBJ = $(addprefix obj/, $(SRC:.cpp=.o))
 CC = c++
 CPPFLAGS = -Wall -Wextra -Werror -Wshadow -std=c++98 -pedantic -g

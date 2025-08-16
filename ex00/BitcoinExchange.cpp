@@ -12,7 +12,7 @@ void BitcoinExchange::updateDataBase(const std::string &db)
     std::string line;
     std::string key;
     char delim;
-    int priceBTC;
+    double priceBTC;
 
     std::fstream f(db);
 
@@ -69,17 +69,15 @@ bool BitcoinExchange::extractDate(const std::string &s)
     int d;
     std::istringstream is(s);
     char delimiter;
-    if (is >> d >> delimiter >> m >> delimiter >> y)
+    if (is >> y >> delimiter >> m >> delimiter >> d)
     {
-        struct tm t = {0};
+        struct tm t = {};
         t.tm_mday = d;
         t.tm_mon = m - 1;
         t.tm_year = y - 1900;
         t.tm_isdst = -1;
-
         time_t when = mktime(&t);
         const struct tm *norm = localtime(&when);
-
         return (norm->tm_mday == d &&
                 norm->tm_mon == m - 1 &&
                 norm->tm_year == y - 1900);
@@ -94,7 +92,7 @@ bool BitcoinExchange::extractDate(const std::string &s)
 BitcoinExchange::BitcoinExchange(const std::string &db)
 {
     std::cout << GREY << "BitcoinExchange database constructor" << RESET << std::endl;
-
+    updateDataBase(db);
     return;
 }
 
@@ -108,6 +106,7 @@ BitcoinExchange::BitcoinExchange(BitcoinExchange const &other)
 {
     std::cout << GREY << "BitcoinExchange copy constructor" << RESET << std::endl;
     /*TODO*/;
+    (void)other;
     return;
 }
 
@@ -131,11 +130,11 @@ BitcoinExchange::~BitcoinExchange()
 /********************************************/
 /****** STREAM ******/
 
-std::ostream &operator<<(std::ostream &o, const BitcoinExchange &infile)
-{
-    o << "";
-    return o;
-}
+// std::ostream &operator<<(std::ostream &o, const BitcoinExchange &infile)
+// {
+//     o << "";
+//     return o;
+// }
 
 /********************************************/
 /********************************************/

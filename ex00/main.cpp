@@ -36,11 +36,12 @@ int main(int argc, char **argv)
 			{
 				std::string date;
 				char delim;
-				int amountBTC;
+				double amountBTC;
 				std::istringstream lineStream(line);
 				if (!(lineStream >> date >> delim >> amountBTC) || delim != '|')
 				{
 					std::cerr << "Error: bad input => " << line << std::endl;
+					
 					continue;
 				}
 				std::cout << btc.executeLine(date, amountBTC) << std::endl;
