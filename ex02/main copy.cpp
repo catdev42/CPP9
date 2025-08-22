@@ -1,8 +1,6 @@
 #include <iostream>
 #include <vector>
 
-#include <cstddef>
-
 // getting a bit confused how to actually do this
 
 // i need to start with the current jacobsthal number and go back down to the previous (smaller) one
@@ -10,41 +8,43 @@
 
 // need condition for inserting at the very end or the very beginning
 
-// 0 1 2 3 4 5(6)
-
-// last is one past the en d of the search range
-size_t lower_bound_index(const std::vector<int> &vec, size_t first, size_t last, int val)
+void binarySearchInsert(std::vector<int> &main, size_t endIndex, int num)
 {
-	size_t count = last - first; // the number of things
-	while (count > 0)			 // the array we are working with is 0 size
+	size_t mIndex;
+	size_t sIndex;
+
+	sIndex = 0;
+	if (main[endIndex] < num)
 	{
-		size_t step = count / 2;   // half of things
-		size_t mid = first + step; // index of the center
-
-		if (vec[mid] < val)
-		{
-			first = mid + 1; // we get rid of mid and search above it
-			count = count - step - 1;
-		}
-		else // if (vec[mid] >= val)
-		{
-			count = step;
-		}
+		main.insert(main.end(), num);
+		return;
 	}
-	return first;
-}
-
-void binarySearchInsert(std::vector<int> &main, size_t startIndex, size_t endIndex, int num)
-{
+	std::lower_bound(main.begin() + endIndex, main.begin() + (endIndex * 2), num);
+	while (true)
+	{
+		mIndex = (endIndex + sIndex) / 2;
+		if ((main[mIndex] > num && main[mIndex - 1] < num) || endIndex == 0)
+		{
+			main.insert(main.begin() + mIndex, num);
+			break;
+		}
+		if (sIndex == endIndex || sIndex + 1 == endIndex) // delete if not triggered
+		{
+			std::cerr << "Error: something went wrong, cannot insert";
+			exit(1);
+		}
+		if (num < main[mIndex])
+			endIndex = mIndex;
+		else
+			sIndex = mIndex;
+	}
 }
 
 void insertPendIntoMain(const std::vector<int> &pend, std::vector<int> &main, size_t *jacobsthal, size_t jaclen)
 {
 	size_t iPend;	// index in pend
 	size_t iJacobs; // index in jacobs
-	size_t last;
 	bool isFinished;
-	size_t insertIndex;
 	std::vector<int> ogMain = main;
 
 	isFinished = 0;
@@ -55,29 +55,32 @@ void insertPendIntoMain(const std::vector<int> &pend, std::vector<int> &main, si
 	iJacobs++;
 	while (iJacobs < jaclen)
 	{
-		if (jacobsthal[iJacobs] > main.size())
+		if (jacobsthal[iJacobs] > pend.size())
 		{
 			iPend = pend.size() - 1;
 			isFinished = 1;
-			last = main.size();
 		}
 		else
-		{
-			iPend = jacobsthal[iJacobs] - 1;
-			last = jacobsthal[iJacobs];
-		}
+			iPend = jacobsthal[iJacobs];
 
-		while (iPend >= jacobsthal[iJacobs - 1])
+		while (iPend > jacobsthal[iJacobs - 1])
 		{
-
-			insertIndex = lower_bound_index(main, 0, last, pend[iPend]);
-			main.insert(main.begin() + insertIndex, pend[iPend]);
+			size_t current_partner_idx = iPend;
+			int partner_value = ogMain[iPend];
+			for (size_t j = iPend; j < iPend + jacobsthal[iJacobs]; ++j)
+			{
+				if (main[j] == partner_value)
+				{
+					current_partner_idx = j;
+					break;
+				}
+			}
+			binarySearchInsert(main, current_partner_idx, pend[iPend]);
 			iPend--;
 		}
 
 		if (isFinished)
 			break;
-		iJacobs++;
 	}
 }
 
@@ -184,36 +187,4 @@ int main(int argc, char **argv)
 // catch (std::exception &e)
 // {
 // 	std::cout << e.what() << std::endl;
-// }
-
-// void binarySearchInsert(std::vector<int> &main, size_t endIndex, int num)
-// {
-// 	size_t mIndex;
-// 	size_t sIndex;
-
-// 	sIndex = 0;
-// 	if (main[endIndex] < num)
-// 	{
-// 		main.insert(main.end(), num);
-// 		return;
-// 	}
-// 	std::lower_bound(main.begin() + endIndex, main.begin() + (endIndex * 2), num);
-// 	while (true)
-// 	{
-// 		mIndex = (endIndex + sIndex) / 2;
-// 		if ((main[mIndex] > num && main[mIndex - 1] < num) || endIndex == 0)
-// 		{
-// 			main.insert(main.begin() + mIndex, num);
-// 			break;
-// 		}
-// 		if (sIndex == endIndex || sIndex + 1 == endIndex) // delete if not triggered
-// 		{
-// 			std::cerr << "Error: something went wrong, cannot insert";
-// 			exit(1);
-// 		}
-// 		if (num < main[mIndex])
-// 			endIndex = mIndex;
-// 		else
-// 			sIndex = mIndex;
-// 	}
 // }
