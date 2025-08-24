@@ -5,8 +5,7 @@
 SRC = main.cpp
 OBJ = $(addprefix obj/, $(SRC:.cpp=.o))
 CC = c++
-CPPFLAGS = -Wall -Wextra -Werror -Wshadow  
-# -pedantic -g
+CPPFLAGS = -Wall -Wextra -Werror -Wshadow  -pedantic -g
 # -std=c++98
 NAME = PmergeMe
 
