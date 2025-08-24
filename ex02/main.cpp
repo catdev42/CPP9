@@ -24,7 +24,7 @@ size_t lower_bound_index(const std::vector<int> &vec, size_t first, size_t last,
 	return first;
 }
 
-void insert_or_reorganize_for_num(std::pair<int, int> &element, std::vector<std::pair<int, int> > &numPairs, size_t index)
+void insert_or_reorganize_for_num(std::pair<int, int> &element, std::vector<std::pair<int, int>> &numPairs, size_t index)
 {
 	// we will compare element with pair at index
 	if (element.second >= numPairs[index].second)
@@ -38,7 +38,7 @@ void insert_or_reorganize_for_num(std::pair<int, int> &element, std::vector<std:
 	}
 }
 
-void recursive_insert_sort(std::vector<std::pair<int, int> > &numPairs, size_t index)
+void recursive_insert_sort(std::vector<std::pair<int, int>> &numPairs, size_t index)
 {
 	if (index < 1)
 		return;
@@ -51,12 +51,12 @@ void recursive_insert_sort(std::vector<std::pair<int, int> > &numPairs, size_t i
 	}
 }
 
-void create_main_and_pend(const std::vector<std::pair<int, int> > &unsortedPairs, std::vector<int> &main, std::vector<int> &pend)
+void create_main_and_pend(const std::vector<std::pair<int, int>> &sortedPairs, std::vector<int> &main, std::vector<int> &pend)
 {
-	for (size_t i = 0; i < unsortedPairs.size(); i++)
+	for (size_t i = 0; i < sortedPairs.size(); i++)
 	{
-		main.push_back(unsortedPairs[i].second);
-		pend.push_back(unsortedPairs[i].first);
+		main.push_back(sortedPairs[i].second);
+		pend.push_back(sortedPairs[i].first);
 	}
 }
 
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 	long n1, n2;
 	long straggler = -3000000000;
 	size_t i;
-	std::vector<std::pair<int, int> > numPairs;
+	std::vector<std::pair<int, int>> numPairs;
 	std::vector<int> main;
 	std::vector<int> pend;
 
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
 			numPairs.push_back(std::make_pair<int, int>(static_cast<int>(n1), static_cast<int>(n2)));
 		else
 			numPairs.push_back(std::make_pair<int, int>(static_cast<int>(n2), static_cast<int>(n1)));
-		i++;
+		i += 2;
 	}
 	if (numPairs.size() > 1500)
 		std::cerr << "Error: too many numbers, but here are the results anyway" << std::endl;
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
 	/*
 	Ford Johnson Merge Insert Sort Algorithm
 	*/
-	recursive_insert_sort(numPairs, i - 1 - 1); // i - 1 - 1: adjust for argv[0] && len - 1: last index
+	recursive_insert_sort(numPairs, numPairs.size() - 1); // i - 1 - 1: adjust for argv[0] && len - 1: last index
 	create_main_and_pend(numPairs, main, pend);
 	insert_pend_into_main(pend, main, jacobsthal);
 	if (straggler >= INT_MIN && straggler < INT_MAX)
