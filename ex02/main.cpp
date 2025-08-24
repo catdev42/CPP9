@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 
+#include <climits>
+#include <cstdlib>
 #include <cstddef>
 
 size_t lower_bound_index(const std::vector<int> &vec, size_t first, size_t last, int val)
@@ -24,7 +26,7 @@ size_t lower_bound_index(const std::vector<int> &vec, size_t first, size_t last,
 	return first;
 }
 
-void insert_or_reorganize_for_num(std::pair<int, int> &element, std::vector<std::pair<int, int>> &numPairs, size_t index)
+void insert_or_reorganize_for_num(std::pair<int, int> element, std::vector<std::pair<int, int>> &numPairs, size_t index)
 {
 	// we will compare element with pair at index
 	if (element.second >= numPairs[index].second)
@@ -60,7 +62,7 @@ void create_main_and_pend(const std::vector<std::pair<int, int>> &sortedPairs, s
 	}
 }
 
-void insert_pend_into_main(std::vector<int> &main, std::vector<int> &pend, std::vector<size_t> jacobs)
+void insert_pend_into_main(std::vector<int> &pend, std::vector<int> &main, std::vector<size_t> jacobs)
 {
 	size_t j;
 	size_t index;
@@ -72,13 +74,22 @@ void insert_pend_into_main(std::vector<int> &main, std::vector<int> &pend, std::
 		index = jacobs[j];
 		while (index > jacobs[j - 1])
 		{
-			size_t maxIndexToSearch = jacobs[j - 1] * 2 + (jacobs[j] - jacobs[j - 1]);
+			size_t maxIndexToSearch = jacobs[j - 1] * 2 + (jacobs[j] - jacobs[j - 1]) + 1;
 			size_t insertIndex = lower_bound_index(main, 0, maxIndexToSearch, pend[index]);
 			main.insert(main.begin() + insertIndex, pend[index]);
 			index--;
 		}
 		j++;
 	}
+	index = pend.size()-1;
+	while (index > jacobs[j - 1])
+	{
+		size_t maxIndexToSearch = jacobs[j - 1] * 2 + (pend.size() - 1 - jacobs[j - 1]) + 1;
+		size_t insertIndex = lower_bound_index(main, 0, maxIndexToSearch, pend[index]);
+		main.insert(main.begin() + insertIndex, pend[index]);
+		index--;
+	}
+
 }
 
 int main(int argc, char **argv)
