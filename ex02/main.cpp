@@ -26,7 +26,7 @@ size_t lower_bound_index(const std::vector<int> &vec, size_t first, size_t last,
 	return first;
 }
 
-void insert_or_reorganize_for_num(std::pair<int, int> element, std::vector<std::pair<int, int>> &numPairs, size_t index)
+void insert_or_reorganize_for_num(std::pair<int, int> element, std::vector<std::pair<int, int> > &numPairs, size_t index)
 {
 	// we will compare element with pair at index
 	if (element.second >= numPairs[index].second)
@@ -35,12 +35,15 @@ void insert_or_reorganize_for_num(std::pair<int, int> element, std::vector<std::
 	{
 		numPairs[index + 1] = numPairs[index];
 		if (index == 0)
+		{
+			numPairs[0] = element;
 			return;
+		}
 		insert_or_reorganize_for_num(element, numPairs, index - 1);
 	}
 }
 
-void recursive_insert_sort(std::vector<std::pair<int, int>> &numPairs, size_t index)
+void recursive_insert_sort(std::vector<std::pair<int, int> > &numPairs, size_t index)
 {
 	if (index < 1)
 		return;
@@ -53,7 +56,7 @@ void recursive_insert_sort(std::vector<std::pair<int, int>> &numPairs, size_t in
 	}
 }
 
-void create_main_and_pend(const std::vector<std::pair<int, int>> &sortedPairs, std::vector<int> &main, std::vector<int> &pend)
+void create_main_and_pend(const std::vector<std::pair<int, int> > &sortedPairs, std::vector<int> &main, std::vector<int> &pend)
 {
 	for (size_t i = 0; i < sortedPairs.size(); i++)
 	{
@@ -62,34 +65,33 @@ void create_main_and_pend(const std::vector<std::pair<int, int>> &sortedPairs, s
 	}
 }
 
-void insert_pend_into_main(std::vector<int> &pend, std::vector<int> &main, std::vector<size_t> jacobs)
+void insert_pend_into_main(std::vector<int> &main, std::vector<int> &pend, std::vector<size_t> jacobs)
 {
 	size_t j;
 	size_t index;
 	j = 0;
 	main.insert(main.begin(), pend[0]); // insert before all numbers
 	j++;
-	while (jacobs[j] < pend.size())
+	while (j < jacobs.size() && jacobs[j] < pend.size())
 	{
-		index = jacobs[j];
+		index = jacobs[j] - 1;
+		size_t maxIndexToSearch = jacobs[j - 1] * 2 + (jacobs[j] - jacobs[j - 1]) + 1;
 		while (index > jacobs[j - 1])
 		{
-			size_t maxIndexToSearch = jacobs[j - 1] * 2 + (jacobs[j] - jacobs[j - 1]) + 1;
 			size_t insertIndex = lower_bound_index(main, 0, maxIndexToSearch, pend[index]);
 			main.insert(main.begin() + insertIndex, pend[index]);
 			index--;
 		}
 		j++;
 	}
-	index = pend.size()-1;
-	while (index > jacobs[j - 1])
+	index = pend.size() - 1;
+	while (index >= jacobs[j - 1])
 	{
 		size_t maxIndexToSearch = jacobs[j - 1] * 2 + (pend.size() - 1 - jacobs[j - 1]) + 1;
 		size_t insertIndex = lower_bound_index(main, 0, maxIndexToSearch, pend[index]);
 		main.insert(main.begin() + insertIndex, pend[index]);
 		index--;
 	}
-
 }
 
 int main(int argc, char **argv)
@@ -97,7 +99,7 @@ int main(int argc, char **argv)
 	long n1, n2;
 	long straggler = -3000000000;
 	size_t i;
-	std::vector<std::pair<int, int>> numPairs;
+	std::vector<std::pair<int, int> > numPairs;
 	std::vector<int> main;
 	std::vector<int> pend;
 
@@ -114,9 +116,9 @@ int main(int argc, char **argv)
 		return (1);
 	}
 	i = 1;
-	while (argv[i])
+	while (i < static_cast<size_t>(argc))
 	{
-		n1 = strtol(argv[i], &endptr, 0);
+		n1 = strtol(argv[i], &endptr, 10);
 		if (*endptr != 0 || n1 > INT_MAX)
 		{
 			std::cerr << "Error: not an int" << std::endl;
@@ -127,7 +129,7 @@ int main(int argc, char **argv)
 			straggler = static_cast<int>(n1);
 			break;
 		}
-		n2 = strtol(argv[i + 1], &endptr, 0);
+		n2 = strtol(argv[i + 1], &endptr, 10);
 		if (*endptr != 0 || n1 > INT_MAX)
 		{
 			std::cerr << "Error: not an int" << std::endl;
@@ -146,10 +148,10 @@ int main(int argc, char **argv)
 	/*
 	Ford Johnson Merge Insert Sort Algorithm
 	*/
-	recursive_insert_sort(numPairs, numPairs.size() - 1); // i - 1 - 1: adjust for argv[0] && len - 1: last index
+	recursive_insert_sort(numPairs, numPairs.size() - 1);
 	create_main_and_pend(numPairs, main, pend);
-	insert_pend_into_main(pend, main, jacobsthal);
-	if (straggler >= INT_MIN && straggler < INT_MAX)
+	insert_pend_into_main(main, pend, jacobsthal);
+	if (straggler >= INT_MIN && straggler <= INT_MAX)
 	{
 		size_t insertIndex = lower_bound_index(main, 0, main.size(), straggler);
 		main.insert(main.begin() + insertIndex, straggler);
