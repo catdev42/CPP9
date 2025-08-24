@@ -3,16 +3,6 @@
 
 #include <cstddef>
 
-// getting a bit confused how to actually do this
-
-// i need to start with the current jacobsthal number and go back down to the previous (smaller) one
-// i need to insert them into the main array using binary search
-
-// need condition for inserting at the very end or the very beginning
-
-// 0 1 2 3 4 5(6)
-
-// last is one past the en d of the search range
 size_t lower_bound_index(const std::vector<int> &vec, size_t first, size_t last, int val)
 {
 	size_t count = last - first; // the number of things
@@ -34,113 +24,59 @@ size_t lower_bound_index(const std::vector<int> &vec, size_t first, size_t last,
 	return first;
 }
 
-void binarySearchInsert(std::vector<int> &main, size_t startIndex, size_t endIndex, int num)
+void insert_or_reorganize_for_num(std::pair<int, int> &element, std::vector<std::pair<int, int>> &numPairs, size_t index)
 {
-}
-
-void insertPendIntoMain(const std::vector<int> &pend, std::vector<int> &main, size_t *jacobsthal, size_t jaclen)
-{
-	size_t iPend;	// index in pend
-	size_t iJacobs; // index in jacobs
-	size_t last;
-	bool isFinished;
-	size_t insertIndex;
-	std::vector<int> ogMain = main;
-
-	isFinished = 0;
-	iJacobs = 0;
-	iPend = 0;
-
-	main.insert(main.begin(), pend[0]);
-	iJacobs++;
-	while (iJacobs < jaclen)
+	// we will compare element with pair at index
+	if (element.second >= numPairs[index].second)
+		numPairs[index + 1] = element;
+	else
 	{
-		if (jacobsthal[iJacobs] > main.size())
-		{
-			iPend = pend.size() - 1;
-			isFinished = 1;
-			last = main.size();
-		}
-		else
-		{
-			iPend = jacobsthal[iJacobs] - 1;
-			last = jacobsthal[iJacobs];
-		}
-
-		while (iPend >= jacobsthal[iJacobs - 1])
-		{
-
-			insertIndex = lower_bound_index(main, 0, last, pend[iPend]);
-			main.insert(main.begin() + insertIndex, pend[iPend]);
-			iPend--;
-		}
-
-		if (isFinished)
-			break;
-		iJacobs++;
+		numPairs[index + 1] = numPairs[index];
+		if (index == 0)
+			return;
+		insert_or_reorganize_for_num(element, numPairs, index - 1);
 	}
 }
 
-void fordSort(std::vector<int> &numbersOg)
+void recursive_insert_sort(std::vector<std::pair<int, int>> &numPairs, size_t index)
 {
-	std::vector<int> main;
-	std::vector<int> numbers;
-
-	numbers = numbersOg;
-	size_t i = 0;
-	int straggler = -1;
-	static size_t jacobsthal[] = {0, 1, 3, 5, 11, 21, 43, 85, 171, 341, 683, 1365, 2731};
-	static int jaclen = 13;
-
-	if (numbers.size() == 1)
+	if (index < 1)
 		return;
-	if (numbers.size() == 2)
+	else
 	{
-		if (numbers[0] > numbers[1])
-			std::swap(numbers[0], numbers[1]);
-		return;
+		// launch n number of recursive sortings, one for each index
+		recursive_insert_sort(numPairs, index - 1);
+		// insertion algo
+		insert_or_reorganize_for_num(numPairs[index], numPairs, index - 1);
 	}
-	// organize inside pairs
-	while (i + 1 < numbers.size())
+}
+
+void create_main_and_pend(const std::vector<std::pair<int, int>> &unsortedPairs, std::vector<int> &main, std::vector<int> &pend)
+{
+	for (size_t i = 0; i < unsortedPairs.size(); i++)
 	{
-		if (numbers[i] < numbers[i + 1])
-			std::swap(numbers[i], numbers[i + 1]);
-		main.push_back(numbers[i]);
-		i += 2;
+		main.push_back(unsortedPairs[i].second);
+		pend.push_back(unsortedPairs[i].first);
 	}
+}
 
-	if (i < numbers.size())
-		straggler = numbers[i];
-
-	fordSort(main);
-
-	std::vector<int> pend;
-	// iterate through the ordered "main"
-	// fill the pend vector with appropriate pairs
-	// match the order of "pend" to be the same as main
-	for (i = 0; i < main.size(); i++)
-	{
-		for (size_t j = 0; j + 1 < numbers.size(); j += 2)
-			if (numbers[j] == main[i])
-			{
-				pend.push_back(numbers[j + 1]);
-				numbers[j] = -1;
-				break;
-			}
-	}
-	insertPendIntoMain(pend, main, jacobsthal, jaclen);
-	if (straggler > 0)
-		binarySearchInsert(main, main.size() - 1, straggler);
-	numbersOg = main;
+void insert_pend_into_main(std::vector<int> &main, std::vector<int> &pend, std::vector<int> jacobs)
+{
 }
 
 int main(int argc, char **argv)
 {
-	long n;
+	long n1, n2;
 	size_t i;
-	// std::vector<std::pair<int, int>> myPairs;
-	std::vector<int> unsortedNumbers;
-	std::vector<int> sorted;
+	std::vector<std::pair<int, int>> numPairs;
+	std::vector<int> main;
+	std::vector<int> pend;
+
+	static size_t jacobsthal[] = {0, 1, 3, 5, 11, 21, 43, 85, 171, 341, 683, 1365, 2731};
+	size_t jacobsthalSize = sizeof(jacobsthal) / sizeof(jacobsthal[0]);
+
+	std::vector<int> jacobsthalV(jacobsthal, jacobsthal + jacobsthalSize);
+
 	char *endptr = NULL;
 
 	if (argc < 2)
@@ -149,71 +85,41 @@ int main(int argc, char **argv)
 		return (1);
 	}
 	i = 1;
-	n = strtol(argv[i], &endptr, 10);
-
-	if (*endptr != 0)
-	{
-		std::cerr << "Error: not a number" << std::endl;
-		return (1);
-	}
-	i++;
-	unsortedNumbers.push_back(n);
 	while (argv[i])
 	{
-		n = strtol(argv[i], &endptr, 0);
-		unsortedNumbers.push_back(static_cast<int>(n));
+		n1 = strtol(argv[i], &endptr, 0);
+		if (*endptr != 0)
+		{
+			std::cerr << "Error: not a number" << std::endl;
+			return (1);
+		}
+		if (argv[i + 1])
+		{
+			n2 = strtol(argv[i + 1], &endptr, 0);
+			if (*endptr != 0)
+			{
+				std::cerr << "Error: not a number" << std::endl;
+				return (1);
+			}
+		}
+		if (n2 > n1)
+			numPairs.push_back(std::make_pair<int, int>(n1, n2));
+		else
+			numPairs.push_back(std::make_pair<int, int>(n2, n1));
 		i++;
 	}
-	if (unsortedNumbers.size() > 3000)
+	if (numPairs.size() > 1500)
 		std::cerr << "Error: too many numbers, but here are the results anyway" << std::endl;
-	fordSort(unsortedNumbers);
+
+	recursive_insert_sort(numPairs, i - 1 - 1); // adjust for argv[0] && len - 1 for last index
+	create_main_and_pend(numPairs, main, pend);
+	insert_pend_into_main(pend, main, jacobsthalV);
+	// fordSort(unsortedNumberPairs); //TODO
 
 	// PRINT
-	for (i = 0; i < unsortedNumbers.size(); ++i)
+	for (i = 0; i < numPairs.size(); ++i)
 	{
-		std::cout << unsortedNumbers[i] << " ";
+		std::cout << numPairs[i] << " ";
 	}
 	std::cout << std::endl;
 }
-
-// try
-// {
-// 	result = RPN::processRPN(str);
-// 	std::cout << result << std::endl;
-// }
-// catch (std::exception &e)
-// {
-// 	std::cout << e.what() << std::endl;
-// }
-
-// void binarySearchInsert(std::vector<int> &main, size_t endIndex, int num)
-// {
-// 	size_t mIndex;
-// 	size_t sIndex;
-
-// 	sIndex = 0;
-// 	if (main[endIndex] < num)
-// 	{
-// 		main.insert(main.end(), num);
-// 		return;
-// 	}
-// 	std::lower_bound(main.begin() + endIndex, main.begin() + (endIndex * 2), num);
-// 	while (true)
-// 	{
-// 		mIndex = (endIndex + sIndex) / 2;
-// 		if ((main[mIndex] > num && main[mIndex - 1] < num) || endIndex == 0)
-// 		{
-// 			main.insert(main.begin() + mIndex, num);
-// 			break;
-// 		}
-// 		if (sIndex == endIndex || sIndex + 1 == endIndex) // delete if not triggered
-// 		{
-// 			std::cerr << "Error: something went wrong, cannot insert";
-// 			exit(1);
-// 		}
-// 		if (num < main[mIndex])
-// 			endIndex = mIndex;
-// 		else
-// 			sIndex = mIndex;
-// 	}
-// }
