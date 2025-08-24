@@ -71,12 +71,12 @@ void insert_pend_into_main(std::vector<int> &main, std::vector<int> &pend, std::
 	size_t index;
 	j = 0;
 	main.insert(main.begin(), pend[0]); // insert before all numbers
-	j++;
+	j+=2;
 	while (j < jacobs.size() && jacobs[j] < pend.size())
 	{
-		index = jacobs[j];
-		size_t maxIndexToSearch = jacobs[j - 1] * 2 + (jacobs[j] - jacobs[j - 1]) + 1;
-		while (index > jacobs[j - 1])
+		index = jacobs[j] -1;
+		size_t maxIndexToSearch = jacobs[j - 1] * 2 + (jacobs[j] - jacobs[j - 1]);
+		while (index >= jacobs[j - 1])
 		{
 			size_t insertIndex = lower_bound_index(main, 0, maxIndexToSearch, pend[index]);
 			main.insert(main.begin() + insertIndex, pend[index]);
@@ -86,7 +86,7 @@ void insert_pend_into_main(std::vector<int> &main, std::vector<int> &pend, std::
 	}
 	index = pend.size() - 1;
 	size_t maxIndexToSearch = main.size();
-	while (index > jacobs[j - 1])
+	while (index >= jacobs[j - 1])
 	{
 		size_t insertIndex = lower_bound_index(main, 0, maxIndexToSearch, pend[index]);
 		main.insert(main.begin() + insertIndex, pend[index]);
