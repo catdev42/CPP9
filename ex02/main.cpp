@@ -5,6 +5,10 @@
 #include <cstdlib>
 #include <cstddef>
 
+size_t count_compare = 0;
+
+// template<T>
+// size_t lower_bound_index(T &vec, T::iterator first, size_t last, int val)
 size_t lower_bound_index(const std::vector<int> &vec, size_t first, size_t last, int val)
 {
 	size_t count = last - first; // the number of things
@@ -17,20 +21,26 @@ size_t lower_bound_index(const std::vector<int> &vec, size_t first, size_t last,
 		{
 			first = mid + 1; // we get rid of mid and search above it
 			count = count - step - 1;
+			count_compare++;
 		}
 		else // if (vec[mid] >= val)
 		{
 			count = step;
+			count_compare++;
 		}
 	}
 	return first;
 }
 
-void insert_or_reorganize_for_num(std::pair<int, int> element, std::vector<std::pair<int, int> > &numPairs, size_t index)
+void insert_or_reorganize_for_num(std::pair<int, int> element, std::vector<std::pair<int, int>> &numPairs, size_t index)
 {
 	// we will compare element with pair at index
+	count_compare++; // count counter
+
 	if (element.second >= numPairs[index].second)
+	{
 		numPairs[index + 1] = element;
+	}
 	else
 	{
 		numPairs[index + 1] = numPairs[index];
@@ -43,7 +53,7 @@ void insert_or_reorganize_for_num(std::pair<int, int> element, std::vector<std::
 	}
 }
 
-void recursive_insert_sort(std::vector<std::pair<int, int> > &numPairs, size_t index)
+void recursive_insert_sort(std::vector<std::pair<int, int>> &numPairs, size_t index)
 {
 	if (index < 1)
 		return;
@@ -56,7 +66,7 @@ void recursive_insert_sort(std::vector<std::pair<int, int> > &numPairs, size_t i
 	}
 }
 
-void create_main_and_pend(const std::vector<std::pair<int, int> > &sortedPairs, std::vector<int> &main, std::vector<int> &pend)
+void create_main_and_pend(const std::vector<std::pair<int, int>> &sortedPairs, std::vector<int> &main, std::vector<int> &pend)
 {
 	for (size_t i = 0; i < sortedPairs.size(); i++)
 	{
@@ -71,10 +81,10 @@ void insert_pend_into_main(std::vector<int> &main, std::vector<int> &pend, std::
 	size_t index;
 	j = 0;
 	main.insert(main.begin(), pend[0]); // insert before all numbers
-	j+=2;
+	j += 2;
 	while (j < jacobs.size() && jacobs[j] < pend.size())
 	{
-		index = jacobs[j] -1;
+		index = jacobs[j] - 1;
 		size_t maxIndexToSearch = jacobs[j - 1] * 2 + (jacobs[j] - jacobs[j - 1]);
 		while (index >= jacobs[j - 1])
 		{
@@ -92,15 +102,14 @@ void insert_pend_into_main(std::vector<int> &main, std::vector<int> &pend, std::
 		main.insert(main.begin() + insertIndex, pend[index]);
 		index--;
 	}
-	;
 }
 
 int main(int argc, char **argv)
 {
 	long n1, n2;
-	long straggler = -3000000000;
+	long straggler = static_cast<long>INT_MIN - 1;
 	size_t i;
-	std::vector<std::pair<int, int> > numPairs;
+	std::vector<std::pair<int, int>> numPairs;
 	std::vector<int> main;
 	std::vector<int> pend;
 
@@ -138,9 +147,15 @@ int main(int argc, char **argv)
 		}
 
 		if (n2 > n1)
+		{
+			count_compare++;
 			numPairs.push_back(std::make_pair<int, int>(static_cast<int>(n1), static_cast<int>(n2)));
+		}
 		else
+		{
+			count_compare++;
 			numPairs.push_back(std::make_pair<int, int>(static_cast<int>(n2), static_cast<int>(n1)));
+		}
 		i += 2;
 	}
 	if (numPairs.size() > 1500)
@@ -152,7 +167,7 @@ int main(int argc, char **argv)
 	recursive_insert_sort(numPairs, numPairs.size() - 1);
 	create_main_and_pend(numPairs, main, pend);
 	insert_pend_into_main(main, pend, jacobsthal);
-	if (straggler >= INT_MIN && straggler <= INT_MAX)
+	if (straggler >= INT_MIN)
 	{
 		size_t insertIndex = lower_bound_index(main, 0, main.size(), straggler);
 		main.insert(main.begin() + insertIndex, straggler);
@@ -165,4 +180,6 @@ int main(int argc, char **argv)
 	{
 		std::cout << main[i] << std::endl;
 	}
+
+	std::cout << "comparisons: " << count_compare << std::endl;
 }
