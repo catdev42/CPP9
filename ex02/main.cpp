@@ -79,6 +79,7 @@ void insert_pend_into_main(std::vector<int> &main, std::vector<int> &pend, std::
 {
 	size_t j;
 	size_t index;
+	
 	j = 0;
 	main.insert(main.begin(), pend[0]); // insert before all numbers
 	j += 2;
