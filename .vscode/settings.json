@@ -70,6 +70,12 @@
     "fstream": "cpp",
     "numbers": "cpp",
     "ranges": "cpp",
-    "span": "cpp"
+    "span": "cpp",
+    "queue": "cpp",
+    "__hash_table": "cpp",
+    "__tree": "cpp",
+    "list": "cpp",
+    "filesystem": "cpp",
+    "text_encoding": "cpp"
   }
 }
