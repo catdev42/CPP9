@@ -31,6 +31,14 @@ public:
     PmergeMe();
     PmergeMe(int argc, char **argv);
     ~PmergeMe();
+
+    // TODO: time, printing outputs
+    /*
+    TIME:
+    startTime = std::clock(NULL);
+    endTime = std::time(NULL);
+    double elapsed = double(endTime - startTime) / CLOCKS_PER_SEC;
+    */
     Cont sort(int argc, char **argv)
     {
         Cont numbers;
@@ -173,7 +181,7 @@ public:
             index--;
         }
     }
-    
+
     /**
      * main pos indexes:  2 0 3 1 4 5
      * need to restore the pos indexes to match original array that included all nums
