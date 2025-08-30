@@ -28,9 +28,11 @@ protected:
     typedef typename Cont::value_type value_type;
 
 public:
-    PmergeMe();
-    PmergeMe(int argc, char **argv);
-    ~PmergeMe();
+    PmergeMe() {}
+    PmergeMe(int argc, char **argv) { sort(argc, argv); }
+    ~PmergeMe() {}
+
+    size_t numAmount;
 
     // TODO: time, printing outputs
     /*
@@ -78,6 +80,7 @@ public:
             elem.pos = i;
             main.push_back(num);
         }
+        numAmount = main.size();
         return main;
     }
 
@@ -106,7 +109,7 @@ public:
         insert(pend, main);
         Cont::it pos = main.lower_bound(main.begin(), main.end(), straggler);
         main.insert(inPos, straggler);
-        if (main.size() == number.size())
+        if (main.size() == numAmount)
             sorted = main;
         // main positions have to be restored before return
         return main;
@@ -172,11 +175,12 @@ public:
             j++;
         }
         index = pend.size() - 1;
+        Cont::iterator maxIt = main.end();
         while (index >= jacobs[j - 1])
         {
             Cont::iterator insertIter;
 
-            insertIter = std::lower_bound(main.begin(), main.end());
+            insertIter = std::lower_bound(main.begin(), maxIt);
             main.insert(insertIter, *(advance(pend.begin(), index)));
             index--;
         }
@@ -241,7 +245,18 @@ template <typename Cont>
 size_t PmergeMe<Cont>::jacobs[] = {0, 1, 3, 5, 11, 21, 43, 85, 171, 341, 683, 1365, 2731};
 
 template <typename Cont>
-std::ostream &operator<<(std::ostream &o, PmergeMe<Cont> const &infile);
+std::ostream &operator<<(std::ostream &o, PmergeMe<Cont> const &infile)
+{
+    o << "[";
+    for (typename Cont::const_iterator it = infile.sorted.begin(); it != infile.sorted.end(); ++it)
+    {
+        if (it != infile.sorted.begin())
+            o << ", ";
+        o << "{n: " << it->n << ", pos: " << it->pos << "}";
+    }
+    o << "]";
+    return o;
+}
 
 #endif
 
