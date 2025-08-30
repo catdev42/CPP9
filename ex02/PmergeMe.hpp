@@ -122,11 +122,11 @@ public:
         // main pos indexes: 0 1 2 3 4 5
         if (strag)
             straggler = numbers.back();
-        sort(main);
+        main = sort(main); //main here should be twice as long as prev main
 
         orderPend(numbers, main, pend);
-        insert(main, pend);
-        if (strag)
+        insert(main, pend); //main should be sorted
+        if (strag) // 4 5 6 9 11 12
         {
             typename Cont::iterator pos = std::lower_bound(main.begin(), main.end(), straggler);
             main.insert(pos, straggler);
