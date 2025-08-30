@@ -8,6 +8,7 @@
 #include <ctime>
 #include <sstream>
 #include <exception>
+#include <climits>
 
 #ifndef COLOR
 #define COLOR
@@ -58,15 +59,7 @@ public:
         return this->sorted;
     }
 
-    void check_validity()
-    {
-        if (!is_same<value_type, intM>::value)
-            throw std::runtime_error("Error: expected <intM> as template argument");
-        if (!is_same<std::vector<intM>, Cont>::value &&
-            !is_same<std::deque<intM>, Cont>::value &&
-            !is_same<std::list<intM>, Cont>::value)
-            throw std::runtime_error("Error: expected list, vector or deque");
-    }
+  
 
     Cont initNumbers(int argc, char **argv)
     {
@@ -155,13 +148,16 @@ public:
         typename Cont::iterator end = numbers.end();
         itOdd++;
         i = 0;
-        while (itOdd != end && it != end)
+        while (it != end && itOdd != end)
         {
-            intM *left = &(*it);
-            intM *right = &(*itOdd);
-            if (left->n > right->n)
+            if (it->n > itOdd->n)
+            {
                 std::swap(*it, *itOdd);
-            main.push_back(*right);
+                int temp = it->pos;
+                it->pos = itOdd->pos;
+                itOdd->pos = temp;
+            }
+            main.push_back(*itOdd);
             main.back().pos = i;
             i++;
             it++;
@@ -259,10 +255,19 @@ private:
     time_t endTime;
 
     float time();
-    // std::string containerType();
+    void check_validity()
+    {
+        if (!is_same<value_type, intM>::value)
+            throw std::runtime_error("Error: expected <intM> as template argument");
+        if (!is_same<std::vector<intM>, Cont>::value &&
+            !is_same<std::deque<intM>, Cont>::value &&
+            !is_same<std::list<intM>, Cont>::value)
+            throw std::runtime_error("Error: expected list, vector or deque");
+    }
 
     PmergeMe(PmergeMe const &other) { (void)other; }
     PmergeMe &operator=(PmergeMe const &other) { (void)other; }
+
     template <typename T, typename U>
     struct is_same
     {
