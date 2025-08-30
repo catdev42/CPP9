@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <deque>
+#include <list>
 #include <ctime>
 #include <sstream>
 #include <exception>
@@ -18,7 +19,7 @@ typedef struct intInfo
 {
     int n;
     int pos;
-    bool operator<(struct intInfo a) { return (this->n < a.n); }
+    bool operator<(const struct intInfo& a) const { return this->n < a.n; }
 } intM;
 
 template <typename Cont>
@@ -47,16 +48,17 @@ public:
 
         // check template argument
         check_validity();
-        numbers = initNumbers(char **argv);
+        numbers = initNumbers(argc, argv);
         sort(numbers);
+        return this->sorted;
     }
     void check_validity()
     {
         if (!is_same<value_type, intM>::value)
             throw std::runtime_error("Error: expected <intM> as template argument");
-        if (!is_same<stc::vector<intM>, Cont>::value &&
-            !is_same<stc::deque<intM>, Cont>::value &&
-            !is_same<stc::list<intM>, Cont>::value)
+        if (!is_same<std::vector<intM>, Cont>::value &&
+            !is_same<std::deque<intM>, Cont>::value &&
+            !is_same<std::list<intM>, Cont>::value)
             throw std::runtime_error("Error: expected list, vector or deque");
     }
 
@@ -68,17 +70,18 @@ public:
         {
             long num;
             int n;
-            std::istringstream s = argv[i];
-            if (!(s >> num) || num > INT_MAX || num < INT_MIN)
+            std::stringstream ss;
+            ss << argv[i];
+            if (!(ss >> num) || num > INT_MAX || num < INT_MIN)
             {
                 // std::cerr << "Error: not an int: " << argv[i] << std::endl;
                 throw std::runtime_error(std::string("Error: not an int: ") + argv[i]);
             }
-            n = static_cast<int> num;
+            n = static_cast<int>(num);
             intM elem;
             elem.n = n;
             elem.pos = i;
-            main.push_back(num);
+            main.push_back(elem);
         }
         numAmount = main.size();
         return main;
@@ -95,11 +98,14 @@ public:
             return numbers;
         if (numbers.size() == 2)
         {
+            typename Cont::iterator it = numbers.begin();
+            typename Cont::iterator itOdd = it;
+            itOdd++;
             if (itOdd->n < it->n)
                 std::iter_swap(itOdd, it);
             return numbers;
         }
-        fillMain(numbers, main, straggler);
+        fillMain(numbers, main, strag);
         // main pos indexes: 0 1 2 3 4 5
         if (strag)
             straggler = numbers.back();
@@ -107,21 +113,21 @@ public:
 
         orderPend(numbers, main, pend);
         insert(pend, main);
-        Cont::it pos = main.lower_bound(main.begin(), main.end(), straggler);
-        main.insert(inPos, straggler);
+        typename Cont::iterator pos = std::lower_bound(main.begin(), main.end(), straggler);
+        main.insert(pos, straggler);
         if (main.size() == numAmount)
             sorted = main;
         // main positions have to be restored before return
         return main;
     }
 
-    void fillMain(const Cont &numbers, Cont &main, bool &straggler)
+    void fillMain(Cont &numbers, Cont &main, bool &straggler)
     {
         int i;
 
-        Cont::iterator it = main.begin();
-        Cont::iterator itOdd = main.begin();
-        Cont::iterator end = main.end();
+        typename Cont::iterator it = numbers.begin();
+        typename Cont::iterator itOdd = numbers.begin();
+        typename Cont::iterator end = numbers.end();
         itOdd++;
         i = 0;
         while (itOdd != end && it != end)
@@ -141,48 +147,57 @@ public:
     }
 
     /* Simple advancer for iterators */
-    Cont::iterator advance(Cont::iterator &it, size_t n)
-    {
-        if (is_same<stv::list<intM>, Cont>::value)
-            for (size_t i = 0; i < n; i++)
-                it++;
-        else
-            it += n;
-        return it;
-    }
+    // typename Cont::iterator advance(typename Cont::iterator &it, size_t n)
+    // {
+    //     if (is_same<std::list<intM>, Cont>::value)
+    //         for (size_t i = 0; i < n; i++)
+    //             it++;
+    //     else
+    //         it += n;
+    //     return it;
+    // }
 
     void insert(Cont &main, const Cont &pend)
     {
         size_t j;
         size_t index;
+        size_t jsize;
+        bool finish = 0;
 
         j = 0;
-        main.insert(main.being(), *(pend.begin())); // check
+        main.insert(main.begin(), *(pend.begin())); // check
         j += 2;
-        while (j < jacobs.size() && jacobs[j] < pend.size())
+        jsize = sizeof(jacobs) / sizeof(jacobs[0]);
+        size_t maxIndexToSearch;
+        // while (j < jsize && jacobs[j] < pend.size())
+        while (!finish)
         {
             index = jacobs[j] - 1;
-            size_t maxIndexToSearch = jacobs[j - 1] * 2 + (jacobs[j] - jacobs[j - 1]);
-            if (maxIndexToSearch >= main.size() - 1)
+            if (index >= pend.size() || j >= jsize)
+            {
+                index = pend.size() - 1;
+                finish = 1;
+            }
+            maxIndexToSearch = jacobs[j - 1] * 2 + (jacobs[j] - jacobs[j - 1]);
+            if (maxIndexToSearch >= main.size() - 1 || j > jsize)
                 maxIndexToSearch = main.size() - 1;
+            typename Cont::iterator itMaxSearch;
+            itMaxSearch = main.begin();
+            std::advance(itMaxSearch, maxIndexToSearch);
+            typename Cont::const_iterator itItem = pend.begin();
+            std::advance(itItem, index);
             while (index >= jacobs[j - 1])
             {
-                Cont::iterator insertIter;
-                insertIter = std::lower_bound(main.begin(), advance(main.begin(), maxIndexToSearch));
-                main.insert(insertIter, *(advance(pend.begin(), index)));
+                typename Cont::iterator itInsert;
+                itInsert = std::lower_bound(main.begin(), itMaxSearch, *itItem);
+                main.insert(itInsert, *itItem);
+                itMaxSearch--;
+                itItem--;
                 index--;
             }
             j++;
-        }
-        index = pend.size() - 1;
-        Cont::iterator maxIt = main.end();
-        while (index >= jacobs[j - 1])
-        {
-            Cont::iterator insertIter;
-
-            insertIter = std::lower_bound(main.begin(), maxIt);
-            main.insert(insertIter, *(advance(pend.begin(), index)));
-            index--;
+            if (finish)
+                break;
         }
     }
 
@@ -194,25 +209,24 @@ public:
      * */
     void orderPend(const Cont &numbers, Cont &main, Cont &pend)
     {
-        Cont::iterator numIt;
-        Cont::iterator it = main.begin();
-        Cont::iterator end = main.end();
+        typename Cont::const_iterator numIt;
+        typename Cont::iterator it = main.begin();
+        typename Cont::iterator end = main.end();
 
         while (it != end)
         {
             numIt = numbers.begin();
-            advance(numIt, (it->pos * 2));
-
+            std::advance(numIt, (it->pos * 2));
             pend.push_back(*numIt); // add elements to pend
             // update pos member in struct so it matches the previous recursive call
-            it->pos = pos * 2 + 1;
+            it->pos = it->pos * 2 + 1;
             it++;
         }
     }
+    Cont sorted; // TODO make private
 
 private:
     static size_t jacobs[];
-    Cont sorted;
 
     time_t startTime;
     time_t endTime;
