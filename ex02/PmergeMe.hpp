@@ -46,7 +46,6 @@ public:
     PmergeMe() {}
     PmergeMe(int argc, char **argv) { sort(argc, argv); }
     ~PmergeMe() {}
-    size_t numAmount;
 
     const Cont getSortedContainer() const { return sorted; }
     const Cont getUnsortedContainer() const { return unsorted; }
@@ -131,7 +130,7 @@ public:
             straggler = numbers.back();
         main = sort(main);
         orderPend(numbers, main, pend);
-        insert(main, pend); 
+        insert(main, pend);
         if (strag)
         {
             typename Cont::iterator pos = std::lower_bound(main.begin(), main.end(), straggler);
@@ -188,7 +187,7 @@ public:
         while (!finish)
         {
             index = jacobs[j] - 1;
-            if (index >= pend.size()-1 || j >= jsize)
+            if (index >= pend.size() - 1 || j >= jsize)
             {
                 index = pend.size() - 1;
                 finish = 1;
@@ -231,8 +230,8 @@ public:
         {
             numIt = numbers.begin();
             std::advance(numIt, (it->pos * 2));
-            pend.push_back(*numIt); // add elements to pend
-            it->pos = it->pos * 2 + 1; //restoring original positions in main to match prev recursive call
+            pend.push_back(*numIt);    // add elements to pend
+            it->pos = it->pos * 2 + 1; // restoring original positions in main to match prev recursive call
             it++;
         }
     }
@@ -243,11 +242,12 @@ private:
 
     Cont sorted;
     Cont unsorted;
+    double elapsed;
 
+    size_t numAmount;
     static size_t jacobs[];
     time_t startTime;
     time_t endTime;
-    double elapsed;
 
     void check_validity()
     {
@@ -287,20 +287,20 @@ std::ostream &operator<<(std::ostream &o, PmergeMe<Cont> const &infile)
     const Cont sorted = infile.getSortedContainer();
     const Cont unsorted = infile.getUnsortedContainer();
 
-     o << "Before: ";
+    o << "Before: ";
     for (typename Cont::const_iterator it = unsorted.begin(); it != unsorted.end(); ++it)
     {
         if (it != unsorted.begin())
             o << ", ";
-        o << it->n ;
+        o << it->n;
     }
-    o << std::endl;   
+    o << std::endl;
     o << "After: ";
     for (typename Cont::const_iterator it = sorted.begin(); it != sorted.end(); ++it)
     {
         if (it != sorted.begin())
             o << ", ";
-        o << it->n ;
+        o << it->n;
     }
     return o;
 }
