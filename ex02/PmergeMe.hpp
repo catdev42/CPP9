@@ -19,9 +19,22 @@ typedef struct intInfo
 {
     int n;
     int pos;
-    bool operator<(const struct intInfo& a) const { return this->n < a.n; }
+    bool operator<(const struct intInfo &a) const { return this->n < a.n; }
+    bool operator>(const struct intInfo &a) const { return this->n > a.n; }
+
 } intM;
 
+// TODO: time, printing outputs
+/*
+TIME:
+startTime = std::clock(NULL);
+endTime = std::time(NULL);
+double elapsed = double(endTime - startTime) / CLOCKS_PER_SEC;
+*/
+
+/**
+ * templated class for Ford Johnson sorting algorithm
+ */
 template <typename Cont>
 class PmergeMe
 {
@@ -32,16 +45,8 @@ public:
     PmergeMe() {}
     PmergeMe(int argc, char **argv) { sort(argc, argv); }
     ~PmergeMe() {}
-
     size_t numAmount;
 
-    // TODO: time, printing outputs
-    /*
-    TIME:
-    startTime = std::clock(NULL);
-    endTime = std::time(NULL);
-    double elapsed = double(endTime - startTime) / CLOCKS_PER_SEC;
-    */
     Cont sort(int argc, char **argv)
     {
         Cont numbers;
@@ -52,6 +57,7 @@ public:
         sort(numbers);
         return this->sorted;
     }
+
     void check_validity()
     {
         if (!is_same<value_type, intM>::value)
@@ -80,7 +86,7 @@ public:
             n = static_cast<int>(num);
             intM elem;
             elem.n = n;
-            elem.pos = i;
+            elem.pos = i - 1;
             main.push_back(elem);
         }
         numAmount = main.size();
@@ -105,6 +111,22 @@ public:
                 std::iter_swap(itOdd, it);
             return numbers;
         }
+        if (numbers.size() == 3)
+        {
+            typename Cont::iterator zero = numbers.begin();
+            typename Cont::iterator one = zero;
+            one++;
+            typename Cont::iterator two = one;
+            two++;
+            if (*zero > *one && *zero > *two)
+                std::iter_swap(zero, two);
+            else if (*one > *zero && *one > *two)
+                std::iter_swap(one, two);
+            if (*zero > *one)
+                std::iter_swap(zero, one);
+            sorted = numbers;
+            return numbers;
+        }
         fillMain(numbers, main, strag);
         // main pos indexes: 0 1 2 3 4 5
         if (strag)
@@ -112,9 +134,12 @@ public:
         sort(main);
 
         orderPend(numbers, main, pend);
-        insert(pend, main);
-        typename Cont::iterator pos = std::lower_bound(main.begin(), main.end(), straggler);
-        main.insert(pos, straggler);
+        insert(main, pend);
+        if (strag)
+        {
+            typename Cont::iterator pos = std::lower_bound(main.begin(), main.end(), straggler);
+            main.insert(pos, straggler);
+        }
         if (main.size() == numAmount)
             sorted = main;
         // main positions have to be restored before return
@@ -140,6 +165,8 @@ public:
             main.back().pos = i;
             i++;
             it++;
+            it++;
+            itOdd++;
             itOdd++;
         }
         if (it != end)
