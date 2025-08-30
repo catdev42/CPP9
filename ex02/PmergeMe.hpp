@@ -59,8 +59,6 @@ public:
         return this->sorted;
     }
 
-  
-
     Cont initNumbers(int argc, char **argv)
     {
         Cont main;
@@ -196,7 +194,7 @@ public:
         while (!finish)
         {
             index = jacobs[j] - 1;
-            if (index >= pend.size() || j >= jsize)
+            if (index >= pend.size()-1 || j >= jsize)
             {
                 index = pend.size() - 1;
                 finish = 1;
@@ -204,18 +202,19 @@ public:
             maxIndexToSearch = jacobs[j - 1] * 2 + (jacobs[j] - jacobs[j - 1]);
             if (maxIndexToSearch >= main.size() - 1 || j > jsize)
                 maxIndexToSearch = main.size() - 1;
-            typename Cont::iterator itMaxSearch;
-            itMaxSearch = main.begin();
-            std::advance(itMaxSearch, maxIndexToSearch);
-            typename Cont::const_iterator itItem = pend.begin();
-            std::advance(itItem, index);
+
             while (index >= jacobs[j - 1])
             {
-                typename Cont::iterator itInsert;
+                typename Cont::iterator itMaxSearch;
+                itMaxSearch = main.begin();
+                std::advance(itMaxSearch, maxIndexToSearch);
+                typename Cont::const_iterator itItem = pend.begin();
+                std::advance(itItem, index);
+                typename Cont::iterator itInsert = main.begin();
                 itInsert = std::lower_bound(main.begin(), itMaxSearch, *itItem);
                 main.insert(itInsert, *itItem);
-                itMaxSearch--;
-                itItem--;
+                // itMaxSearch--; // if not a list then
+                // itItem--;
                 index--;
             }
             j++;
@@ -298,7 +297,8 @@ std::ostream &operator<<(std::ostream &o, PmergeMe<Cont> const &infile)
     {
         if (it != infile.sorted.begin())
             o << ", ";
-        o << "{n: " << it->n << ", pos: " << it->pos << "}";
+        // o << "{n: " << it->n << ", pos: " << it->pos << "}";
+        o << it->n ;
     }
     o << "]";
     return o;
