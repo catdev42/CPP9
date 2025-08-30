@@ -48,14 +48,22 @@ public:
     ~PmergeMe() {}
     size_t numAmount;
 
+    const Cont getSortedContainer() const { return sorted; }
+    const Cont getUnsortedContainer() const { return unsorted; }
+    double getElapsed() const { return elapsed; }
+
     Cont sort(int argc, char **argv)
     {
         Cont numbers;
 
-        // check template argument
+        startTime = std::clock();
         check_validity();
         numbers = initNumbers(argc, argv);
+        unsorted = numbers;
         sort(numbers);
+        endTime = std::clock();
+        elapsed = double(endTime - startTime) / CLOCKS_PER_SEC;
+
         return this->sorted;
     }
 
@@ -119,24 +127,22 @@ public:
             return numbers;
         }
         fillMain(numbers, main, strag);
-        // main pos indexes: 0 1 2 3 4 5
         if (strag)
             straggler = numbers.back();
-        main = sort(main); //main here should be twice as long as prev main
-
+        main = sort(main);
         orderPend(numbers, main, pend);
-        insert(main, pend); //main should be sorted
-        if (strag) // 4 5 6 9 11 12
+        insert(main, pend); 
+        if (strag)
         {
             typename Cont::iterator pos = std::lower_bound(main.begin(), main.end(), straggler);
             main.insert(pos, straggler);
         }
         if (main.size() == numAmount)
             sorted = main;
-        // main positions have to be restored before return
         return main;
     }
 
+    /*gives new indexes to main made of biggen numbers*/
     void fillMain(Cont &numbers, Cont &main, bool &straggler)
     {
         int i;
@@ -167,17 +173,6 @@ public:
             straggler = true;
     }
 
-    /* Simple advancer for iterators */
-    // typename Cont::iterator advance(typename Cont::iterator &it, size_t n)
-    // {
-    //     if (is_same<std::list<intM>, Cont>::value)
-    //         for (size_t i = 0; i < n; i++)
-    //             it++;
-    //     else
-    //         it += n;
-    //     return it;
-    // }
-
     void insert(Cont &main, const Cont &pend)
     {
         size_t j;
@@ -190,7 +185,6 @@ public:
         j += 2;
         jsize = sizeof(jacobs) / sizeof(jacobs[0]);
         size_t maxIndexToSearch;
-        // while (j < jsize && jacobs[j] < pend.size())
         while (!finish)
         {
             index = jacobs[j] - 1;
@@ -213,8 +207,6 @@ public:
                 typename Cont::iterator itInsert = main.begin();
                 itInsert = std::lower_bound(main.begin(), itMaxSearch, *itItem);
                 main.insert(itInsert, *itItem);
-                // itMaxSearch--; // if not a list then
-                // itItem--;
                 index--;
             }
             j++;
@@ -240,20 +232,23 @@ public:
             numIt = numbers.begin();
             std::advance(numIt, (it->pos * 2));
             pend.push_back(*numIt); // add elements to pend
-            // update pos member in struct so it matches the previous recursive call
-            it->pos = it->pos * 2 + 1;
+            it->pos = it->pos * 2 + 1; //restoring original positions in main to match prev recursive call
             it++;
         }
     }
-    Cont sorted; // TODO make private
 
 private:
-    static size_t jacobs[];
+    PmergeMe(PmergeMe const &other) { (void)other; }
+    PmergeMe &operator=(PmergeMe const &other) { (void)other; }
 
+    Cont sorted;
+    Cont unsorted;
+
+    static size_t jacobs[];
     time_t startTime;
     time_t endTime;
+    double elapsed;
 
-    float time();
     void check_validity()
     {
         if (!is_same<value_type, intM>::value)
@@ -263,9 +258,6 @@ private:
             !is_same<std::list<intM>, Cont>::value)
             throw std::runtime_error("Error: expected list, vector or deque");
     }
-
-    PmergeMe(PmergeMe const &other) { (void)other; }
-    PmergeMe &operator=(PmergeMe const &other) { (void)other; }
 
     template <typename T, typename U>
     struct is_same
@@ -292,17 +284,33 @@ size_t PmergeMe<Cont>::jacobs[] = {0, 1, 3, 5, 11, 21, 43, 85, 171, 341, 683, 13
 template <typename Cont>
 std::ostream &operator<<(std::ostream &o, PmergeMe<Cont> const &infile)
 {
-    o << "[";
-    for (typename Cont::const_iterator it = infile.sorted.begin(); it != infile.sorted.end(); ++it)
+    const Cont sorted = infile.getSortedContainer();
+    const Cont unsorted = infile.getUnsortedContainer();
+
+     o << "Before: ";
+    for (typename Cont::const_iterator it = unsorted.begin(); it != unsorted.end(); ++it)
     {
-        if (it != infile.sorted.begin())
+        if (it != unsorted.begin())
             o << ", ";
-        // o << "{n: " << it->n << ", pos: " << it->pos << "}";
         o << it->n ;
     }
-    o << "]";
+    o << std::endl;   
+    o << "After: ";
+    for (typename Cont::const_iterator it = sorted.begin(); it != sorted.end(); ++it)
+    {
+        if (it != sorted.begin())
+            o << ", ";
+        o << it->n ;
+    }
     return o;
 }
+
+/*
+Before: 3 5 9 7 4
+After: 3 4 5 7 9
+Time to process a range of 5 elements with std::[..] : 0.00031 us
+Time to process a range of 5 elements with std::[..] : 0.00014 us
+*/
 
 #endif
 
