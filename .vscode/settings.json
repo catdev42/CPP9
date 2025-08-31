@@ -76,6 +76,9 @@
     "__tree": "cpp",
     "list": "cpp",
     "filesystem": "cpp",
-    "text_encoding": "cpp"
+    "text_encoding": "cpp",
+    "iomanip": "cpp",
+    "climits": "cpp",
+    "*.tpp": "cpp"
   }
 }
