@@ -40,7 +40,7 @@ public:
     PmergeMe() {}
     PmergeMe(int argc, char **argv) { sort(argc, argv); }
     ~PmergeMe() {}
-
+    /* getters */
     const Cont getSortedContainer() const { return sorted; }
     const Cont getUnsortedContainer() const { return unsorted; }
     double getElapsed() const { return elapsed; }
@@ -49,6 +49,7 @@ public:
     {
         return is_sorted_by_n(sorted);
     }
+
     Cont sort(int argc, char **argv)
     {
         Cont numbers;
@@ -60,10 +61,28 @@ public:
         sort(numbers, inserted);
         endTime = std::clock();
         elapsed = double(endTime - startTime) / CLOCKS_PER_SEC;
-
         return this->sorted;
     }
 
+
+private:
+    PmergeMe(PmergeMe const &other) { (void)other; }
+    PmergeMe &operator=(PmergeMe const &other) { (void)other; }
+
+    Cont sorted;
+    Cont unsorted;
+    double elapsed;
+
+    size_t numAmount;
+    static size_t jacobs[];
+    time_t startTime;
+    time_t endTime;
+
+    void check_validity();
+    Cont initNumbers(int argc, char **argv);
+
+    Cont small_sort(Cont &numbers)
+    ;
     Cont sort(Cont &numbers, size_t &inserted)
     {
 
@@ -72,51 +91,18 @@ public:
         intM straggler;
         bool strag = false;
 
-        // log_container(std::cout, numbers, "\nnumbers before fillMain organizing", 0);
-        if (numbers.size() == 1)
-            return numbers;
-        if (numbers.size() == 2)
-        {
-            typename Cont::iterator it = numbers.begin();
-            typename Cont::iterator itOdd = it;
-            itOdd++;
-            if (itOdd->n < it->n)
-                std::iter_swap(itOdd, it);
-            return numbers;
-        }
-        if (numbers.size() == 3)
-        {
-            typename Cont::iterator zero = numbers.begin();
-            typename Cont::iterator one = zero;
-            one++;
-            typename Cont::iterator two = one;
-            two++;
-            if (*zero > *one && *zero > *two)
-                std::iter_swap(zero, two);
-            else if (*one > *zero && *one > *two)
-                std::iter_swap(one, two);
-            if (*zero > *one)
-                std::iter_swap(zero, one);
-            sorted = numbers;
-            return numbers;
-        }
-        // log_container(std::cout, numbers, "\nnumbers befor fillMain :", 1);
-        numbers = fillMain(numbers, main, strag);
-        // log_container(std::cout, numbers, "numbers after fillMain :", 1);
+        if (numbers.size() <= 3)
+            return small_sort(numbers);
 
+        numbers = fillMain(numbers, main, strag);
         if (strag)
             straggler = numbers.back();
         main = sort(main, inserted);
-        // log_container(std::cout, main, "\nmain befor order pend:", 1);
         orderPend(numbers, main, pend);
-        // log_container(std::cout, numbers, "all numbers:", 1);
-        // log_container(std::cout, main, "main after order pend:", 1);
-        // log_container(std::cout, pend, "pend after order pend:", 1);
         insert(main, pend, inserted);
         if (strag)
         {
             typename Cont::iterator pos = std::lower_bound(main.begin(), main.end(), straggler);
-            // straggler.pos = straggler.pos * 2;
             main.insert(pos, straggler);
             ++inserted;
         }
@@ -133,20 +119,15 @@ public:
         bool finish = 0;
 
         j = 0;
-        // //log_container(main, "\nmain before insert");
-        // //log_container(pend, "pend before insert");
-
-        // log_container(main, "\nmain before insertion  ", 1); // DEBUG
         if (*pend.begin() < *main.begin() && ++inserted)
-            main.insert(main.begin(), *pend.begin()); // check
+            main.insert(main.begin(), *pend.begin());
         else
         {
             typename Cont::iterator max = main.begin();
             std::advance(max, inserted);
             max = std::lower_bound(main.begin(), max, *pend.begin());
-            main.insert(max, *pend.begin()); // check
+            main.insert(max, *pend.begin());
         }
-
         j += 2;
         jsize = sizeof(jacobs) / sizeof(jacobs[0]);
         size_t maxIndexToSearch;
@@ -159,15 +140,11 @@ public:
                 finish = 1;
             }
             maxIndexToSearch = jacobs[j - 1] * 2 + (jacobs[j] - jacobs[j - 1]) + inserted;
-            // maxIndexToSearch = jacobs[j] + inserted + 3;
-            if (maxIndexToSearch >= main.size() - 1 || j > jsize)
+            if (maxIndexToSearch >= main.size() - 1 || j >= jsize)
                 maxIndexToSearch = main.size() - 1;
 
             while (index >= jacobs[j - 1])
             {
-                // log_container(main, "\nmain before lower_bound", 1); // DEBUG
-                // log_container(pend, "pend before lower_bound", 1);   // DEBUG
-
                 typename Cont::iterator itMaxSearch;
                 itMaxSearch = main.begin();
                 std::advance(itMaxSearch, maxIndexToSearch + 1);
@@ -175,73 +152,35 @@ public:
                 std::advance(itItem, index);
                 typename Cont::iterator itInsert = main.begin();
                 itInsert = std::lower_bound(main.begin(), itMaxSearch, *itItem);
-                /* DEBUG
-
-                if (itItem->n > itInsert->n) //DEBUG
-                {
-                    debug_log << "LOG: \n"
-                              << "index:[" << index << "]; \n"
-                              << "inserted:[" << inserted << "]; \n"
-                              << "itItem->n:[" << itItem->n << "]; \n"
-                              << "itInsert->n:[" << itInsert->n << "]; \n"
-                              << "actual insert index:[" << itInsert - main.begin() << "]; \n"
-
-                              << "maxIndexToSearch[" << maxIndexToSearch << "]; \n"
-                              << "main[maxIndexToSearch]:[" << main[maxIndexToSearch].n << "]; \n"
-                              << "last 2 lines should have the same num maybe"
-                              << std::endl;
-
-                    for (typename Cont::const_iterator it = unsorted.begin(); it != unsorted.end(); ++it)
-                    {
-                        std::cout << it->n;
-                        // if (pos)
-                        // std::cout << "pos[" << it->pos << "]";
-                        std::cout << " ";
-                    }
-
-                    throw std::runtime_error("INSERT ERROR");
-                }
-
-                */
                 main.insert(itInsert, *itItem);
-                // ++inserted;
-                // if (!is_sorted_by_n(main))
-
-                // log_container(main, "main after  lower_bound", 1); // DEBUG
                 index--;
             }
             j++;
             if (finish)
                 break;
         }
-        // log_container(main, "main after  insert");
     }
 
-    /*gives new indexes to main*/
     Cont fillMain(Cont &numbers, Cont &main, bool &straggler)
     {
-        int i;
-
+        int i = 0;
         typename Cont::iterator it = numbers.begin();
-        typename Cont::iterator itOdd = numbers.begin();
+        typename Cont::iterator itOdd = it;
         typename Cont::iterator end = numbers.end();
         itOdd++;
-        i = 0;
-        // log_container(std::cout, main, "\nmain befor order pend:", 1);
+
         while (it != end && itOdd != end)
         {
             if (it->n > itOdd->n)
                 std::iter_swap(it, itOdd);
-            main.push_back(*itOdd); // always push the bigger one into main
-            main.back().pos = i;    // index of the PAIR
+            main.push_back(*itOdd);
+            main.back().pos = i; // index of the PAIR
             i++;
             std::advance(it, 2);
             std::advance(itOdd, 2);
         }
         if (it != end)
-        {
             straggler = true;
-        }
         return numbers;
     }
 
@@ -254,48 +193,22 @@ public:
         while (it != end)
         {
             numIt = numbers.begin();
-            std::advance(numIt, (it->pos * 2)); // take pos of item in main which is holding the index of the pair
-            // go to the pair
-            //  if (it->n == numIt->n) //if the thing at even number is the same as at it
-            //      ++numIt; // point to the thing thats next...
-            pend.push_back(*numIt); // add elements to pend
+            std::advance(numIt, (it->pos * 2));
+            pend.push_back(*numIt);
             if (numIt->pos % 2 == 0)
                 it->pos = it->pos * 2 + 1;
             else
                 it->pos = it->pos * 2;
-            // restoring original positions in main to match prev recursive call
-
-            /*
-            std::advance(numIt, (it->pos * 2));
-            pend.push_back(*numIt);    // add elements to pend
-            it->pos = it->pos * 2 + 1; // restoring original positions in main to match prev recursive call
-            */
-
             it++;
         }
     }
 
-private:
-    PmergeMe(PmergeMe const &other) { (void)other; }
-    PmergeMe &operator=(PmergeMe const &other) { (void)other; }
 
-    Cont sorted;
-    Cont unsorted;
-    double elapsed;
-
-    size_t numAmount;
-    static size_t jacobs[];
-    time_t startTime;
-    time_t endTime;
-
-    Cont initNumbers(int argc, char **argv);
 
     void log_container(const Cont &c, const std::string &label, bool pos = 0);
     std::ostream &log_container(std::ostream &o, const Cont &c, const std::string &label, bool pos = 0);
-
     bool is_sorted_by_n(const Cont &c) const;
 
-    void check_validity();
     template <typename T, typename U>
     struct is_same
     {
