@@ -84,7 +84,7 @@ std::ostream &PmergeMe<Cont>::log_container(std::ostream &o, const Cont &c, cons
 }
 
 template <typename Cont>
-bool PmergeMe<Cont>::is_sorted_by_n(const Cont &c)
+bool PmergeMe<Cont>::is_sorted_by_n(const Cont &c) const
 {
 	if (c.empty())
 		return true;

@@ -45,6 +45,10 @@ public:
     const Cont getUnsortedContainer() const { return unsorted; }
     double getElapsed() const { return elapsed; }
 
+    bool is_sorted() const
+    {
+        return is_sorted_by_n(sorted);
+    }
     Cont sort(int argc, char **argv)
     {
         Cont numbers;
@@ -68,7 +72,7 @@ public:
         intM straggler;
         bool strag = false;
 
-        log_container(std::cout, numbers, "\nnumbers before fillMain organizing", 0);
+        // log_container(std::cout, numbers, "\nnumbers before fillMain organizing", 0);
         if (numbers.size() == 1)
             return numbers;
         if (numbers.size() == 2)
@@ -96,23 +100,23 @@ public:
             sorted = numbers;
             return numbers;
         }
-        log_container(std::cout, numbers, "\nnumbers befor fillMain :", 1);
+        // log_container(std::cout, numbers, "\nnumbers befor fillMain :", 1);
         numbers = fillMain(numbers, main, strag);
-        log_container(std::cout, numbers, "numbers after fillMain :", 1);
+        // log_container(std::cout, numbers, "numbers after fillMain :", 1);
 
         if (strag)
             straggler = numbers.back();
         main = sort(main, inserted);
-        log_container(std::cout, main, "\nmain befor order pend:", 1);
+        // log_container(std::cout, main, "\nmain befor order pend:", 1);
         orderPend(numbers, main, pend);
-        log_container(std::cout, numbers, "all numbers:", 1);
-        log_container(std::cout, main, "main after order pend:", 1);
-        log_container(std::cout, pend, "pend after order pend:", 1);
+        // log_container(std::cout, numbers, "all numbers:", 1);
+        // log_container(std::cout, main, "main after order pend:", 1);
+        // log_container(std::cout, pend, "pend after order pend:", 1);
         insert(main, pend, inserted);
         if (strag)
         {
             typename Cont::iterator pos = std::lower_bound(main.begin(), main.end(), straggler);
-            straggler.pos =  straggler.pos * 2;
+            // straggler.pos = straggler.pos * 2;
             main.insert(pos, straggler);
             ++inserted;
         }
@@ -129,10 +133,10 @@ public:
         bool finish = 0;
 
         j = 0;
-        // log_container(main, "\nmain before insert");
-        // log_container(pend, "pend before insert");
+        // //log_container(main, "\nmain before insert");
+        // //log_container(pend, "pend before insert");
 
-        log_container(main, "\nmain before insertion  ", 1); // DEBUG
+        // log_container(main, "\nmain before insertion  ", 1); // DEBUG
         if (*pend.begin() < *main.begin() && ++inserted)
             main.insert(main.begin(), *pend.begin()); // check
         else
@@ -161,8 +165,8 @@ public:
 
             while (index >= jacobs[j - 1])
             {
-                log_container(main, "\nmain before lower_bound", 1); // DEBUG
-                log_container(pend, "pend before lower_bound", 1);   // DEBUG
+                // log_container(main, "\nmain before lower_bound", 1); // DEBUG
+                // log_container(pend, "pend before lower_bound", 1);   // DEBUG
 
                 typename Cont::iterator itMaxSearch;
                 itMaxSearch = main.begin();
@@ -203,7 +207,7 @@ public:
                 // ++inserted;
                 // if (!is_sorted_by_n(main))
 
-                log_container(main, "main after  lower_bound", 1); // DEBUG
+                // log_container(main, "main after  lower_bound", 1); // DEBUG
                 index--;
             }
             j++;
@@ -227,18 +231,9 @@ public:
         while (it != end && itOdd != end)
         {
             if (it->n > itOdd->n)
-            {
-                std::swap(*it, *itOdd);
-                int temp = it->pos;
-                it->pos = itOdd->pos;
-                itOdd->pos = temp;
-            }
-            // if (it->n < itOdd->n)
-            //     main.push_back(*itOdd);
-            // else
-            //     main.push_back(*it);
-            main.push_back(*itOdd);
-            main.back().pos = i;
+                std::iter_swap(it, itOdd);
+            main.push_back(*itOdd); // always push the bigger one into main
+            main.back().pos = i;    // index of the PAIR
             i++;
             std::advance(it, 2);
             std::advance(itOdd, 2);
@@ -259,9 +254,23 @@ public:
         while (it != end)
         {
             numIt = numbers.begin();
+            std::advance(numIt, (it->pos * 2)); // take pos of item in main which is holding the index of the pair
+            // go to the pair
+            //  if (it->n == numIt->n) //if the thing at even number is the same as at it
+            //      ++numIt; // point to the thing thats next...
+            pend.push_back(*numIt); // add elements to pend
+            if (numIt->pos % 2 == 0)
+                it->pos = it->pos * 2 + 1;
+            else
+                it->pos = it->pos * 2;
+            // restoring original positions in main to match prev recursive call
+
+            /*
             std::advance(numIt, (it->pos * 2));
             pend.push_back(*numIt);    // add elements to pend
             it->pos = it->pos * 2 + 1; // restoring original positions in main to match prev recursive call
+            */
+
             it++;
         }
     }
@@ -284,7 +293,7 @@ private:
     void log_container(const Cont &c, const std::string &label, bool pos = 0);
     std::ostream &log_container(std::ostream &o, const Cont &c, const std::string &label, bool pos = 0);
 
-    bool is_sorted_by_n(const Cont &c);
+    bool is_sorted_by_n(const Cont &c) const;
 
     void check_validity();
     template <typename T, typename U>
@@ -317,6 +326,8 @@ std::ostream &operator<<(std::ostream &o, PmergeMe<Cont> const &infile)
     const Cont sorted = infile.getSortedContainer();
     const Cont unsorted = infile.getUnsortedContainer();
 
+    if (!infile.is_sorted())
+        throw std::runtime_error("Its not sorted! ERROR BAD PROGRAM");
     o << "Before: ";
     for (typename Cont::const_iterator it = unsorted.begin(); it != unsorted.end(); ++it)
     {

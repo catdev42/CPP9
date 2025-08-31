@@ -16,12 +16,12 @@ int main(int argc, char **argv)
 		std::cout << "Time to process a range of " << argc - 1 
 		<< " elements with std::vector : " << v.getElapsed() << " us" << std::endl;
 
-		// PmergeMe<std::list<intM> > l(argc, argv);
-		// std::cout << "Time to process a range of " << argc - 1 
-		// << " elements with std::list : " << l.getElapsed() << " us" << std::endl;
-		// PmergeMe<std::deque<intM> > d(argc, argv);
-		// std::cout << "Time to process a range of " << argc - 1 
-		// << " elements with std::deque : " << d.getElapsed() << " us" << std::endl;
+		PmergeMe<std::list<intM> > l(argc, argv);
+		std::cout << "Time to process a range of " << argc - 1 
+		<< " elements with std::list : " << l.getElapsed() << " us" << std::endl;
+		PmergeMe<std::deque<intM> > d(argc, argv);
+		std::cout << "Time to process a range of " << argc - 1 
+		<< " elements with std::deque : " << d.getElapsed() << " us" << std::endl;
 	}
 	catch (const std::exception &e)
 	{
