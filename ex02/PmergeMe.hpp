@@ -9,12 +9,17 @@
 #include <sstream>
 #include <exception>
 #include <climits>
+#include <fstream>
 
 #ifndef COLOR
 #define COLOR
 #define GREY "\033[0;30m"
+#define RED "\033[0;31m"
+#define GREEN "\033[0;32m"
 #define RESET "\033[0m"
 #endif
+
+std::ofstream debug_log("debug_log.txt");
 
 typedef struct intInfo
 {
@@ -25,17 +30,6 @@ typedef struct intInfo
 
 } intM;
 
-// TODO: time, printing outputs
-/*
-TIME:
-startTime = std::clock(NULL);
-endTime = std::time(NULL);
-double elapsed = double(endTime - startTime) / CLOCKS_PER_SEC;
-*/
-
-/**
- * templated class for Ford Johnson sorting algorithm
- */
 template <typename Cont>
 class PmergeMe
 {
@@ -54,44 +48,19 @@ public:
     Cont sort(int argc, char **argv)
     {
         Cont numbers;
-
+        size_t inserted;
         startTime = std::clock();
         check_validity();
         numbers = initNumbers(argc, argv);
         unsorted = numbers;
-        sort(numbers);
+        sort(numbers, inserted);
         endTime = std::clock();
         elapsed = double(endTime - startTime) / CLOCKS_PER_SEC;
 
         return this->sorted;
     }
 
-    Cont initNumbers(int argc, char **argv)
-    {
-        Cont main;
-
-        for (int i = 1; i < argc; i++)
-        {
-            long num;
-            int n;
-            std::stringstream ss;
-            ss << argv[i];
-            if (!(ss >> num) || num > INT_MAX || num < INT_MIN)
-            {
-                // std::cerr << "Error: not an int: " << argv[i] << std::endl;
-                throw std::runtime_error(std::string("Error: not an int: ") + argv[i]);
-            }
-            n = static_cast<int>(num);
-            intM elem;
-            elem.n = n;
-            elem.pos = i - 1;
-            main.push_back(elem);
-        }
-        numAmount = main.size();
-        return main;
-    }
-
-    Cont sort(Cont &numbers)
+    Cont sort(Cont &numbers, size_t &inserted)
     {
         Cont main;
         Cont pend;
@@ -128,20 +97,21 @@ public:
         fillMain(numbers, main, strag);
         if (strag)
             straggler = numbers.back();
-        main = sort(main);
+        main = sort(main, inserted);
         orderPend(numbers, main, pend);
-        insert(main, pend);
+        insert(main, pend, inserted);
         if (strag)
         {
             typename Cont::iterator pos = std::lower_bound(main.begin(), main.end(), straggler);
             main.insert(pos, straggler);
+            ++inserted;
         }
         if (main.size() == numAmount)
             sorted = main;
         return main;
     }
 
-    /*gives new indexes to main made of biggen numbers*/
+    /*gives new indexes to main*/
     void fillMain(Cont &numbers, Cont &main, bool &straggler)
     {
         int i;
@@ -163,16 +133,17 @@ public:
             main.push_back(*itOdd);
             main.back().pos = i;
             i++;
-            it++;
-            it++;
-            itOdd++;
-            itOdd++;
+            std::advance(it, 2);
+            std::advance(itOdd, 2);
         }
         if (it != end)
+        {
             straggler = true;
+        }
     }
 
-    void insert(Cont &main, const Cont &pend)
+    void orderPend(const Cont &numbers, Cont &main, Cont &pend);
+    void insert(Cont &main, const Cont &pend, size_t &inserted)
     {
         size_t j;
         size_t index;
@@ -180,7 +151,14 @@ public:
         bool finish = 0;
 
         j = 0;
-        main.insert(main.begin(), *(pend.begin())); // check
+        // log_container(main, "\nmain before insert");
+        // log_container(pend, "pend before insert");
+
+        if (*pend.begin() < *main.begin() && ++inserted)
+            main.insert(main.begin(), *pend.begin()); // check
+        else
+            main.insert(++main.begin(), *pend.begin()); // check
+
         j += 2;
         jsize = sizeof(jacobs) / sizeof(jacobs[0]);
         size_t maxIndexToSearch;
@@ -192,48 +170,47 @@ public:
                 index = pend.size() - 1;
                 finish = 1;
             }
-            maxIndexToSearch = jacobs[j - 1] * 2 + (jacobs[j] - jacobs[j - 1]);
+            maxIndexToSearch = jacobs[j] + inserted;
             if (maxIndexToSearch >= main.size() - 1 || j > jsize)
                 maxIndexToSearch = main.size() - 1;
 
             while (index >= jacobs[j - 1])
             {
+                log_container(main, "\nmain before lower_bound");
+                log_container(pend, "pend before lower_bound");
+
                 typename Cont::iterator itMaxSearch;
                 itMaxSearch = main.begin();
-                std::advance(itMaxSearch, maxIndexToSearch);
+                std::advance(itMaxSearch, maxIndexToSearch + 2);
                 typename Cont::const_iterator itItem = pend.begin();
                 std::advance(itItem, index);
                 typename Cont::iterator itInsert = main.begin();
                 itInsert = std::lower_bound(main.begin(), itMaxSearch, *itItem);
+                if (itItem->n > itInsert->n)
+                {
+                    debug_log << "LOG: \n"
+                              << "index:[" << index << "]; \n"
+                              << "inserted:[" << inserted << "]; \n"
+                              << "itItem->n:[" << itItem->n << "]; \n"
+                              << "itInsert->n:[" << itInsert->n << "]; \n"
+                              << "maxIndexToSearch[" << maxIndexToSearch << "]; \n"
+                              << "main[maxIndexToSearch]:[" << main[maxIndexToSearch].n << "]; \n"
+                              << "last 2 lines should have the same num maybe"
+                              << std::endl;
+                    throw std::runtime_error("INSERT ERROR");
+                }
                 main.insert(itInsert, *itItem);
+                ++inserted;
+                // if (!is_sorted_by_n(main))
+
+                log_container(main, "main after  lower_bound");
                 index--;
             }
             j++;
             if (finish)
                 break;
         }
-    }
-
-    /**
-     * main pos indexes:  2 0 3 1 4 5
-     * need to restore the pos indexes to match original array that included all nums
-     * main pos indexes: 5 1 7 3 9 11
-     * find pend elements: 4 0 6 2 8 10
-     * */
-    void orderPend(const Cont &numbers, Cont &main, Cont &pend)
-    {
-        typename Cont::const_iterator numIt;
-        typename Cont::iterator it = main.begin();
-        typename Cont::iterator end = main.end();
-
-        while (it != end)
-        {
-            numIt = numbers.begin();
-            std::advance(numIt, (it->pos * 2));
-            pend.push_back(*numIt);    // add elements to pend
-            it->pos = it->pos * 2 + 1; // restoring original positions in main to match prev recursive call
-            it++;
-        }
+        // log_container(main, "main after  insert");
     }
 
 private:
@@ -249,16 +226,12 @@ private:
     time_t startTime;
     time_t endTime;
 
-    void check_validity()
-    {
-        if (!is_same<value_type, intM>::value)
-            throw std::runtime_error("Error: expected <intM> as template argument");
-        if (!is_same<std::vector<intM>, Cont>::value &&
-            !is_same<std::deque<intM>, Cont>::value &&
-            !is_same<std::list<intM>, Cont>::value)
-            throw std::runtime_error("Error: expected list, vector or deque");
-    }
+    Cont initNumbers(int argc, char **argv);
 
+    void log_container(const Cont &c, const std::string &label);
+    bool is_sorted_by_n(const Cont &c);
+
+    void check_validity();
     template <typename T, typename U>
     struct is_same
     {
@@ -280,6 +253,8 @@ private:
 
 template <typename Cont>
 size_t PmergeMe<Cont>::jacobs[] = {0, 1, 3, 5, 11, 21, 43, 85, 171, 341, 683, 1365, 2731};
+
+#include "PmergeMe.tpp"
 
 template <typename Cont>
 std::ostream &operator<<(std::ostream &o, PmergeMe<Cont> const &infile)
@@ -305,37 +280,4 @@ std::ostream &operator<<(std::ostream &o, PmergeMe<Cont> const &infile)
     return o;
 }
 
-/*
-Before: 3 5 9 7 4
-After: 3 4 5 7 9
-Time to process a range of 5 elements with std::[..] : 0.00031 us
-Time to process a range of 5 elements with std::[..] : 0.00014 us
-*/
-
 #endif
-
-/*
-//Personal Implementation of lower bound eindex search
-size_t lower_bound_index(const std::vector<int> &vec, size_t first, size_t last, int val)
-{
-    size_t count = last - first; // the number of things
-    while (count > 0)			 // the array we are working with is 0 size
-    {
-        size_t step = count / 2;   // half of things
-        size_t mid = first + step; // index of the center
-
-        if (vec[mid] < val)
-        {
-            first = mid + 1; // we get rid of mid and search above it
-            count = count - step - 1;
-            count_compare++;
-        }
-        else // if (vec[mid] >= val)
-        {
-            count = step;
-            count_compare++;
-        }
-    }
-    return first;
-}
-*/

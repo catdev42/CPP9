@@ -13,6 +13,7 @@ int main(int argc, char **argv)
 		std::cout << std::fixed << std::setprecision(7);
 		std::cout << "Time to process a range of " << argc - 1 
 		<< " elements with std::vector : " << v.getElapsed() << " us" << std::endl;
+
 		PmergeMe<std::list<intM> > l(argc, argv);
 		std::cout << "Time to process a range of " << argc - 1 
 		<< " elements with std::list : " << l.getElapsed() << " us" << std::endl;
