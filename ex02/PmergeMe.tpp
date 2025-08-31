@@ -6,26 +6,26 @@
 /*SORT*/
 
 /*
-* main pos indexes:  2 0 3 1 4 5
-* need to restore the main pos indexes to match og nums array
-* main pos indexes: 5 1 7 3 9 11 find pend elements: 4 0 6 2 8 10
-* */
-template <typename Cont>
-void PmergeMe<Cont>::orderPend(const Cont &numbers, Cont &main, Cont &pend)
-{
-	typename Cont::const_iterator numIt;
-	typename Cont::iterator it = main.begin();
-	typename Cont::iterator end = main.end();
+ * main pos indexes:  2 0 3 1 4 5
+ * need to restore the main pos indexes to match og nums array
+ * main pos indexes: 5 1 7 3 9 11 find pend elements: 4 0 6 2 8 10
+ * */
+// template <typename Cont>
+// void PmergeMe<Cont>::orderPend(const Cont &numbers, Cont &main, Cont &pend)
+// {
+// 	typename Cont::const_iterator numIt;
+// 	typename Cont::iterator it = main.begin();
+// 	typename Cont::iterator end = main.end();
 
-	while (it != end)
-	{
-		numIt = numbers.begin();
-		std::advance(numIt, (it->pos * 2));
-		pend.push_back(*numIt);	   // add elements to pend
-		it->pos = it->pos * 2 + 1; // restoring original positions in main to match prev recursive call
-		it++;
-	}
-}
+// 	while (it != end)
+// 	{
+// 		numIt = numbers.begin();
+// 		std::advance(numIt, (it->pos * 2));
+// 		pend.push_back(*numIt);	   // add elements to pend
+// 		it->pos = it->pos * 2 + 1; // restoring original positions in main to match prev recursive call
+// 		it++;
+// 	}
+// }
 
 /* HELPERS */
 
@@ -55,12 +55,32 @@ Cont PmergeMe<Cont>::initNumbers(int argc, char **argv)
 }
 
 template <typename Cont>
-void PmergeMe<Cont>::log_container(const Cont &c, const std::string &label)
+void PmergeMe<Cont>::log_container(const Cont &c, const std::string &label, bool pos)
 {
 	debug_log << label << ": ";
 	for (typename Cont::const_iterator it = c.begin(); it != c.end(); ++it)
-		debug_log << it->n << " ";
+	{
+		debug_log << it->n;
+		if (pos)
+			debug_log << "pos[" << it->pos << "]";
+		debug_log << " ";
+	}
 	debug_log << std::endl;
+}
+
+template <typename Cont>
+std::ostream &PmergeMe<Cont>::log_container(std::ostream &o, const Cont &c, const std::string &label, bool pos)
+{
+	o << label << ": ";
+	for (typename Cont::const_iterator it = c.begin(); it != c.end(); ++it)
+	{
+		o << it->n;
+		if (pos)
+			o << "pos[" << it->pos << "]";
+		o << " ";
+	}
+	o << std::endl;
+	return o;
 }
 
 template <typename Cont>
