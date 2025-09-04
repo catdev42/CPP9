@@ -19,7 +19,9 @@
 #define RESET "\033[0m"
 #endif
 
+/*
 std::ofstream debug_log("debug_log.txt");
+*/
 
 typedef struct intInfo
 {
@@ -40,30 +42,13 @@ public:
     PmergeMe() {}
     PmergeMe(int argc, char **argv) { sort(argc, argv); }
     ~PmergeMe() {}
-    /* getters */
+
     const Cont getSortedContainer() const { return sorted; }
     const Cont getUnsortedContainer() const { return unsorted; }
     double getElapsed() const { return elapsed; }
+    bool is_sorted() const { return is_sorted_by_n(sorted); }
 
-    bool is_sorted() const
-    {
-        return is_sorted_by_n(sorted);
-    }
-
-    Cont sort(int argc, char **argv)
-    {
-        Cont numbers;
-        size_t inserted = 0;
-        startTime = std::clock();
-        check_validity();
-        numbers = initNumbers(argc, argv);
-        unsorted = numbers;
-        sort(numbers, inserted);
-        endTime = std::clock();
-        elapsed = double(endTime - startTime) / CLOCKS_PER_SEC;
-        return this->sorted;
-    }
-
+    Cont sort(int argc, char **argv);
 
 private:
     PmergeMe(PmergeMe const &other) { (void)other; }
@@ -73,140 +58,19 @@ private:
     Cont unsorted;
     double elapsed;
 
+    Cont sort(Cont &numbers, size_t &inserted);
+    Cont fillMain(Cont &numbers, Cont &main, bool &straggler);
+    void orderPend(const Cont &numbers, Cont &main, Cont &pend);
+    void insert(Cont &main, const Cont &pend, size_t &inserted);
+
+    /* helpers*/
     size_t numAmount;
     static size_t jacobs[];
     time_t startTime;
     time_t endTime;
-
+    Cont small_sort(Cont &numbers);
     void check_validity();
     Cont initNumbers(int argc, char **argv);
-
-    Cont small_sort(Cont &numbers)
-    ;
-    Cont sort(Cont &numbers, size_t &inserted)
-    {
-
-        Cont main;
-        Cont pend;
-        intM straggler;
-        bool strag = false;
-
-        if (numbers.size() <= 3)
-            return small_sort(numbers);
-
-        numbers = fillMain(numbers, main, strag);
-        if (strag)
-            straggler = numbers.back();
-        main = sort(main, inserted);
-        orderPend(numbers, main, pend);
-        insert(main, pend, inserted);
-        if (strag)
-        {
-            typename Cont::iterator pos = std::lower_bound(main.begin(), main.end(), straggler);
-            main.insert(pos, straggler);
-            ++inserted;
-        }
-        if (main.size() == numAmount)
-            sorted = main;
-        return main;
-    }
-
-    void insert(Cont &main, const Cont &pend, size_t &inserted)
-    {
-        size_t j;
-        size_t index;
-        size_t jsize;
-        bool finish = 0;
-
-        j = 0;
-        if (*pend.begin() < *main.begin() && ++inserted)
-            main.insert(main.begin(), *pend.begin());
-        else
-        {
-            typename Cont::iterator max = main.begin();
-            std::advance(max, inserted);
-            max = std::lower_bound(main.begin(), max, *pend.begin());
-            main.insert(max, *pend.begin());
-        }
-        j += 2;
-        jsize = sizeof(jacobs) / sizeof(jacobs[0]);
-        size_t maxIndexToSearch;
-        while (!finish)
-        {
-            index = jacobs[j] - 1;
-            if (index >= pend.size() - 1 || j >= jsize)
-            {
-                index = pend.size() - 1;
-                finish = 1;
-            }
-            maxIndexToSearch = jacobs[j - 1] * 2 + (jacobs[j] - jacobs[j - 1]) + inserted;
-            if (maxIndexToSearch >= main.size() - 1 || j >= jsize)
-                maxIndexToSearch = main.size() - 1;
-
-            while (index >= jacobs[j - 1])
-            {
-                typename Cont::iterator itMaxSearch;
-                itMaxSearch = main.begin();
-                std::advance(itMaxSearch, maxIndexToSearch + 1);
-                typename Cont::const_iterator itItem = pend.begin();
-                std::advance(itItem, index);
-                typename Cont::iterator itInsert = main.begin();
-                itInsert = std::lower_bound(main.begin(), itMaxSearch, *itItem);
-                main.insert(itInsert, *itItem);
-                index--;
-            }
-            j++;
-            if (finish)
-                break;
-        }
-    }
-
-    Cont fillMain(Cont &numbers, Cont &main, bool &straggler)
-    {
-        int i = 0;
-        typename Cont::iterator it = numbers.begin();
-        typename Cont::iterator itOdd = it;
-        typename Cont::iterator end = numbers.end();
-        itOdd++;
-
-        while (it != end && itOdd != end)
-        {
-            if (it->n > itOdd->n)
-                std::iter_swap(it, itOdd);
-            main.push_back(*itOdd);
-            main.back().pos = i; // index of the PAIR
-            i++;
-            std::advance(it, 2);
-            std::advance(itOdd, 2);
-        }
-        if (it != end)
-            straggler = true;
-        return numbers;
-    }
-
-    void orderPend(const Cont &numbers, Cont &main, Cont &pend)
-    {
-        typename Cont::const_iterator numIt;
-        typename Cont::iterator it = main.begin();
-        typename Cont::iterator end = main.end();
-
-        while (it != end)
-        {
-            numIt = numbers.begin();
-            std::advance(numIt, (it->pos * 2));
-            pend.push_back(*numIt);
-            if (numIt->pos % 2 == 0)
-                it->pos = it->pos * 2 + 1;
-            else
-                it->pos = it->pos * 2;
-            it++;
-        }
-    }
-
-
-
-    void log_container(const Cont &c, const std::string &label, bool pos = 0);
-    std::ostream &log_container(std::ostream &o, const Cont &c, const std::string &label, bool pos = 0);
     bool is_sorted_by_n(const Cont &c) const;
 
     template <typename T, typename U>
@@ -217,7 +81,6 @@ private:
             value = 0
         };
     };
-
     template <typename T>
     struct is_same<T, T>
     {
@@ -226,6 +89,11 @@ private:
             value = 1
         };
     };
+
+    /*
+    void log_container(const Cont &c, const std::string &label, bool pos = 0);
+    std::ostream &log_container(std::ostream &o, const Cont &c, const std::string &label, bool pos = 0);
+    */
 };
 
 template <typename Cont>
